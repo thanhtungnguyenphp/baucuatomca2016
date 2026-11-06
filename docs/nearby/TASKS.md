@@ -1,7 +1,7 @@
 # Backlog triển khai Nearby Connections
 
-**Trạng thái:** chỉ lập kế hoạch; tất cả task đang chờ duyệt.  
-**Ưu tiên:** P0 = chứng minh khả thi và khóa ranh giới plugin; P1 = hoàn thiện tính năng; P2 = kiểm thử và phát hành.  
+**Trạng thái:** đang triển khai; xem [tiến độ và bằng chứng kiểm thử](PROGRESS.md).
+**Ưu tiên:** P0 = chứng minh khả thi và khóa ranh giới plugin; P1 = hoàn thiện tính năng; P2 = kiểm thử và phát hành.
 **Ước lượng:** ngày công kỹ thuật, chưa tính thời gian chờ thiết bị hoặc duyệt Store.
 
 | Thứ tự | ID | Ưu tiên | Task / sản phẩm bàn giao | Phụ thuộc | Ước lượng | Tiêu chí hoàn thành |

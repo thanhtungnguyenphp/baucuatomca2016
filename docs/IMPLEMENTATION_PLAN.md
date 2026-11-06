@@ -69,6 +69,6 @@ Chi tiết các đầu vào thuộc publisher và quy trình release: `RELEASE_C
 4. Không thêm tiền thật, đổi thưởng hoặc cơ chế mua Lộc khi chưa có quyết định
    sản phẩm/pháp lý riêng.
 
-## Kế hoạch chơi gần nhau (chờ duyệt)
+## Kế hoạch chơi gần nhau (đang triển khai)
 
-Thiết kế plugin Nearby Connections tái sử dụng và backlog theo thứ tự ưu tiên nằm trong [`nearby/README.md`](nearby/README.md), [`nearby/ARCHITECTURE.md`](nearby/ARCHITECTURE.md) và [`nearby/TASKS.md`](nearby/TASKS.md). Chưa triển khai tính năng trong game.
+Thiết kế plugin Nearby Connections tái sử dụng và backlog theo thứ tự ưu tiên nằm trong [`nearby/README.md`](nearby/README.md), [`nearby/ARCHITECTURE.md`](nearby/ARCHITECTURE.md) và [`nearby/TASKS.md`](nearby/TASKS.md). Tiến độ hiện tại nằm trong [`nearby/PROGRESS.md`](nearby/PROGRESS.md); chưa phát hành tính năng Nearby trong game.
