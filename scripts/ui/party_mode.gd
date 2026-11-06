@@ -3,14 +3,22 @@ extends Control
 const MASCOT_CARD_SCENE := preload("res://scenes/components/MascotCard.tscn")
 const BOWL_SCENE := preload("res://scenes/components/Bowl.tscn")
 const SPRING_BACKGROUND := preload("res://assets/art/spring-lucky-background.png")
-const TOTAL_TURNS := 5
+const TOTAL_TURNS := PartyMatch.TOTAL_TURNS
 
-var player_count := 2
-var turn_number := 1
-var scores: Array[int] = []
-var choices: Array[String] = []
-var chooser := 0
-var phase := "setup"
+var _match := PartyMatch.new()
+var player_count: int:
+	get: return _match.player_count
+var turn_number: int:
+	get: return _match.turn_number
+var scores: Array[int]:
+	get: return _match.scores
+var choices: Array[String]:
+	get: return _match.choices
+var chooser: int:
+	get: return _match.chooser
+var phase: String:
+	get: return _match.phase
+	set(value): _match.phase = value
 var is_animating := false
 var _rng := RandomNumberGenerator.new()
 var _cards: Dictionary = {}
@@ -168,40 +176,24 @@ func _style_button(button: Button, prominent: bool = false) -> void:
 func _change_player_count(delta: int) -> void:
 	if phase != "setup" and phase != "finished":
 		return
-	player_count = clampi(player_count + delta, 2, 4)
+	_match.set_player_count(clampi(player_count + delta, 2, 4))
 	_refresh()
 
 func _start_party() -> void:
-	if phase != "setup" and phase != "finished":
+	if not _match.start():
 		return
-	scores.clear()
-	for index in player_count:
-		scores.append(0)
-	turn_number = 1
-	_reset_choices()
-	phase = "choose"
 	_refresh()
 
-func _reset_choices() -> void:
-	choices.clear()
-	for index in player_count:
-		choices.append("")
-	chooser = 0
-
 func _choose_symbol(symbol: String) -> void:
-	if phase != "choose" or is_animating or chooser >= player_count:
+	if is_animating or not _match.choose_next(symbol):
 		return
-	choices[chooser] = symbol
-	chooser += 1
 	GameSettings.tap_feedback()
 	AudioDirector.play(NativeAudioDirector.Cue.TAP)
 	_refresh()
 
 func _undo_choice() -> void:
-	if phase != "choose" or chooser <= 0 or is_animating:
+	if is_animating or not _match.undo_last_choice():
 		return
-	chooser -= 1
-	choices[chooser] = ""
 	_refresh()
 
 func _on_bowl_tapped() -> void:
@@ -221,10 +213,7 @@ func _roll_party() -> void:
 	_refresh()
 	var results := RoundResolver.roll_results(_rng)
 	await _bowl.play_reveal(results)
-	for index in player_count:
-		for symbol in results:
-			if symbol == choices[index]:
-				scores[index] += 1
+	_match.settle(results)
 	var labels: Array[String] = []
 	for symbol in results:
 		labels.append(GameConstants.SYMBOL_LABELS[symbol])
@@ -237,12 +226,7 @@ func _cover_party() -> void:
 	is_animating = true
 	await _bowl.play_cover()
 	is_animating = false
-	if turn_number >= TOTAL_TURNS:
-		phase = "finished"
-	else:
-		turn_number += 1
-		_reset_choices()
-		phase = "choose"
+	_match.advance()
 	_refresh()
 
 func _refresh() -> void:
