@@ -1,6 +1,6 @@
 # Nearby Connections: kế hoạch plugin dùng lại
 
-**Trạng thái:** đang triển khai trên nhánh `codex/feature-nearby-connections`; xem [tiến độ](PROGRESS.md).
+**Trạng thái:** đang triển khai trên nhánh `codex/feature-nearby-connections`; xem [tổng kết nhánh](BRANCH_REVIEW.md) và [tiến độ](PROGRESS.md).
 **Ngày:** 06/11/2026.
 **Ứng dụng tham chiếu:** Bầu Cua Tôm Cá — Lộc Xuân, Godot 4.7.1, Android.
 
