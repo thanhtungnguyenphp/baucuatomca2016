@@ -1,0 +1,19 @@
+.godot/
+.import/
+*.tmp
+*.translation
+export/
+build/
+*.keystore
+*.jks
+release-keys/
+*.mobileprovision
+
+# Local editor, build outputs, and signing material
+.DS_Store
+.gradle/
+*.log
+*.apk
+*.aab
+local.properties
+android/.build_version
