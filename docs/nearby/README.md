@@ -30,7 +30,7 @@ Mỗi ứng dụng cấp `service_id` riêng khi chạy. Plugin không gắn c�
 3. Chấp nhận cập nhật chính sách quyền riêng tư và Data safety trước khi phát hành, vì Google cho biết Nearby SDK thu thập một số dữ liệu sử dụng và thiết bị.
 4. Xác nhận quy tắc sản phẩm: tối đa bốn người, năm lượt, host rời thì kết thúc phòng, không vào giữa ván.
 
-Xem [kiến trúc](ARCHITECTURE.md) và [backlog theo ưu tiên](TASKS.md).
+Xem [kiến trúc](ARCHITECTURE.md), [backlog theo ưu tiên](TASKS.md) và [bảng kiểm NBY-03/04 trên thiết bị thật](NBY-04_DEVICE_RUNBOOK.md).
 
 ## Tài liệu chính thức
 

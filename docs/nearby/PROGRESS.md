@@ -34,7 +34,7 @@
 
 ## Chưa xác minh / việc tiếp theo
 
-1. **NBY-03/04:** từ chối quyền Nearby tại hộp hệ thống, tắt Bluetooth/Wi-Fi trong phiên, và thử đảo vai Android 11 host / Android 15 guest.
+1. **NBY-03/04:** từ chối quyền Nearby tại hộp hệ thống, tắt Bluetooth/Wi-Fi trong phiên, và thử đảo vai Android 11 host / Android 15 guest. Dùng [bảng kiểm thiết bị thật](NBY-04_DEVICE_RUNBOOK.md) và `plugins/nearby-connections/device-report.sh` để ghi nhận có thể lặp lại; hiện ADB chưa thấy máy nào.
 2. **NBY-05:** cần thêm hai Android thật để thử một host và ba guest với `P2P_STAR`, đo thời gian vào phòng và độ ổn định. Chưa thể quyết định Go/No-Go cho chế độ 2–4 người.
 3. Sau cổng Go/No-Go: hoàn thiện lifecycle/timeout/retry, tích hợp game protocol và UI phòng, rồi QA quyền riêng tư/Data safety trước khi cân nhắc phát hành.
 
