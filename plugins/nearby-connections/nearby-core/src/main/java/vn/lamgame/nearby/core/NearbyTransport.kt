@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
@@ -110,7 +111,7 @@ class NearbyTransport(context: Context, private val listener: NearbyListener) {
             .addOnFailureListener {
                 if (token == generation) {
                     updateState()
-                    error("SDK_ERROR", "startAdvertising")
+                    sdkError("startAdvertising", it)
                 }
             }
     }
@@ -139,7 +140,7 @@ class NearbyTransport(context: Context, private val listener: NearbyListener) {
             .addOnFailureListener {
                 if (token == generation) {
                     updateState()
-                    error("SDK_ERROR", "startDiscovery")
+                    sdkError("startDiscovery", it)
                 }
             }
     }
@@ -156,7 +157,7 @@ class NearbyTransport(context: Context, private val listener: NearbyListener) {
             return@onMain
         }
         client.requestConnection(localName, endpointId, connectionCallback)
-            .addOnFailureListener { error("SDK_ERROR", "requestConnection") }
+            .addOnFailureListener { sdkError("requestConnection", it) }
     }
 
     fun acceptConnection(endpointId: String) = onMain {
@@ -165,7 +166,7 @@ class NearbyTransport(context: Context, private val listener: NearbyListener) {
             return@onMain
         }
         client.acceptConnection(endpointId, payloadCallback)
-            .addOnFailureListener { error("SDK_ERROR", "acceptConnection") }
+            .addOnFailureListener { sdkError("acceptConnection", it) }
     }
 
     fun rejectConnection(endpointId: String) = onMain {
@@ -174,7 +175,7 @@ class NearbyTransport(context: Context, private val listener: NearbyListener) {
             return@onMain
         }
         client.rejectConnection(endpointId)
-            .addOnFailureListener { error("SDK_ERROR", "rejectConnection") }
+            .addOnFailureListener { sdkError("rejectConnection", it) }
         updateState()
     }
 
@@ -188,7 +189,7 @@ class NearbyTransport(context: Context, private val listener: NearbyListener) {
             return@onMain
         }
         client.sendPayload(endpointId, Payload.fromBytes(bytes.copyOf()))
-            .addOnFailureListener { error("SDK_ERROR", "sendBytes") }
+            .addOnFailureListener { sdkError("sendBytes", it) }
     }
 
     fun disconnect(endpointId: String) = onMain {
@@ -254,10 +255,12 @@ class NearbyTransport(context: Context, private val listener: NearbyListener) {
         }
 
         override fun onDisconnected(id: String) = onMain {
-            connected.remove(id)
-            pending.remove(id)
-            updateState()
-            listener.onEndpointDisconnected(id)
+            val wasConnected = connected.remove(id)
+            val wasPending = pending.remove(id)
+            if (wasConnected || wasPending) {
+                updateState()
+                listener.onEndpointDisconnected(id)
+            }
         }
     }
 
@@ -287,6 +290,11 @@ class NearbyTransport(context: Context, private val listener: NearbyListener) {
         if (currentState == value) return
         currentState = value
         listener.onStateChanged(value)
+    }
+
+    private fun sdkError(operation: String, exception: Exception) {
+        val status = (exception as? ApiException)?.statusCode
+        error(if (status == null) "SDK_ERROR" else "SDK_$status", operation)
     }
 
     private fun error(code: String, operation: String) = listener.onError(code, operation)

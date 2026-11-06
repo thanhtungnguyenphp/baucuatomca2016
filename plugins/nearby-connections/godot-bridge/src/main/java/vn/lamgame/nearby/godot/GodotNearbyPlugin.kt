@@ -25,10 +25,10 @@ class GodotNearbyPlugin(godot: Godot) : GodotPlugin(godot), NearbyListener {
         SignalInfo("endpoint_found", String::class.java, String::class.java),
         SignalInfo("endpoint_lost", String::class.java),
         SignalInfo("connection_initiated", String::class.java, String::class.java, String::class.java),
-        SignalInfo("connection_result", String::class.java, Boolean::class.javaPrimitiveType, Int::class.javaPrimitiveType),
+        SignalInfo("connection_result", String::class.java, Boolean::class.javaObjectType, Int::class.javaObjectType),
         SignalInfo("endpoint_disconnected", String::class.java),
         SignalInfo("payload_received", String::class.java, String::class.java),
-        SignalInfo("permission_result", Boolean::class.javaPrimitiveType, String::class.java)
+        SignalInfo("permission_result", Boolean::class.javaObjectType, String::class.java)
     )
 
     @UsedByGodot fun isAvailable(): Boolean = transport.isPlayServicesAvailable()

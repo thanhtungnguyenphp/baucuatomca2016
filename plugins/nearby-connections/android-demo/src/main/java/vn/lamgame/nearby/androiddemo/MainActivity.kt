@@ -23,8 +23,10 @@ class MainActivity : Activity(), NearbyListener {
     private lateinit var status: TextView
     private lateinit var log: TextView
     private lateinit var found: LinearLayout
+    private var verifyDialog: AlertDialog? = null
     private var pendingAction = ""
     private val connected = linkedSetOf<String>()
+    private val foundButtons = mutableMapOf<String, Button>()
     private val displayName = "Android-${(1000..9999).random()}"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +43,7 @@ class MainActivity : Activity(), NearbyListener {
         root.addView(status)
         button(root, "Tạo phòng") { begin("host") }
         button(root, "Tìm phòng") { begin("join") }
-        button(root, "Dừng") { transport.stopAll(); connected.clear() }
+        button(root, "Dừng") { transport.stopAll(); connected.clear(); clearFound() }
         found = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         root.addView(found)
         button(root, "Gửi PING") {
@@ -52,12 +54,18 @@ class MainActivity : Activity(), NearbyListener {
         status.text = if (transport.isPlayServicesAvailable()) "Sẵn sàng" else "Thiếu Google Play services"
     }
 
-    private fun button(parent: LinearLayout, title: String, action: () -> Unit) {
-        parent.addView(Button(this).apply {
+    private fun button(parent: LinearLayout, title: String, action: () -> Unit): Button {
+        return Button(this).apply {
             text = title
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             setOnClickListener { action() }
-        })
+            parent.addView(this)
+        }
+    }
+
+    private fun clearFound() {
+        foundButtons.clear()
+        found.removeAllViews()
     }
 
     private fun begin(action: String) {
@@ -65,6 +73,7 @@ class MainActivity : Activity(), NearbyListener {
             append("Nearby không khả dụng")
             return
         }
+        if (action == "join") clearFound()
         pendingAction = action
         val missing = transport.missingPermissions()
         if (missing.isEmpty()) runPending() else requestPermissions(missing, PERMISSION_REQUEST)
@@ -88,17 +97,23 @@ class MainActivity : Activity(), NearbyListener {
     override fun onStop() {
         transport.stopAll()
         connected.clear()
+        clearFound()
         super.onStop()
     }
 
     override fun onStateChanged(state: String) { status.text = "Trạng thái: $state" }
     override fun onError(code: String, operation: String) { append("Lỗi $code: $operation") }
     override fun onEndpointFound(endpointId: String, name: String) {
-        button(found, "Vào phòng $name") { transport.requestConnection(endpointId, displayName) }
+        foundButtons.remove(endpointId)?.let { found.removeView(it) }
+        foundButtons[endpointId] = button(found, "Vào phòng $name") { transport.requestConnection(endpointId, displayName) }
     }
-    override fun onEndpointLost(endpointId: String) { append("Mất thiết bị $endpointId") }
+    override fun onEndpointLost(endpointId: String) {
+        foundButtons.remove(endpointId)?.let { found.removeView(it) }
+        append("Mất thiết bị $endpointId")
+    }
     override fun onConnectionInitiated(endpointId: String, name: String, authenticationDigits: String) {
-        AlertDialog.Builder(this)
+        verifyDialog?.dismiss()
+        verifyDialog = AlertDialog.Builder(this)
             .setTitle("Xác nhận thiết bị")
             .setMessage("So mã trên cả hai máy:\n\n$authenticationDigits\n\nThiết bị: $name")
             .setPositiveButton("Trùng mã") { _, _ -> transport.acceptConnection(endpointId) }
@@ -107,6 +122,8 @@ class MainActivity : Activity(), NearbyListener {
             .show()
     }
     override fun onConnectionResult(endpointId: String, connectedNow: Boolean, statusCode: Int) {
+        verifyDialog?.dismiss()
+        verifyDialog = null
         if (connectedNow) {
             connected.add(endpointId)
             transport.stopDiscovery()
