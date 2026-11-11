@@ -2,7 +2,14 @@
 
 **Nhánh:** `codex/feature-nearby-connections`
 
-**Trạng thái:** demo transport đã qua kiểm thử hai máy thật; chưa tích hợp chế độ chơi Nearby vào game phát hành.
+**Trạng thái (11/11/2026):** demo transport đã qua kiểm thử hai máy thật ngày 06/11; chưa tích hợp chế độ chơi Nearby vào game phát hành. Backlog: 3 task hoàn thành, 2 đang kiểm thử biên, 1 chờ đủ bốn thiết bị, 7 chờ phụ thuộc.
+
+## Kiểm tra hiện tại — 11/11/2026
+
+- Nhánh tính năng đồng bộ với `origin`; chưa có thay đổi code mới sau commit chuẩn bị kiểm thử `ca9661f` trước lần cập nhật trạng thái này.
+- ADB hiện thấy **một** điện thoại Android 15 (model `23021RAAEG`), chưa thấy điện thoại Android 11 hoặc hai máy bổ sung. Trên máy này Bluetooth, Wi-Fi, Location đều bật; Google Play services và demo Godot Nearby có mặt, các quyền Nearby runtime đã được cấp. Package game phát hành `vn.lamgame.baucuatomca` vẫn có mặt.
+- Hai APK demo hiện có là bản build ngày 06/11. Không có lượt kiểm thử hai máy mới trong ngày 11/11; kết quả kết nối bên dưới là bằng chứng của ngày 06/11.
+- Bước gần nhất: hoàn tất P1/P2/R1/R2/H1 trong [bảng kiểm NBY-03/04](NBY-04_DEVICE_RUNBOOK.md) khi có hai máy; sau đó NBY-05 cần bốn máy để quyết định Go/No-Go cho 2–4 người.
 
 ## Đã thực hiện
 
@@ -34,7 +41,7 @@
 
 ## Chưa xác minh / việc tiếp theo
 
-1. **NBY-03/04:** từ chối quyền Nearby tại hộp hệ thống, tắt Bluetooth/Wi-Fi trong phiên, và thử đảo vai Android 11 host / Android 15 guest. Dùng [bảng kiểm thiết bị thật](NBY-04_DEVICE_RUNBOOK.md) và `plugins/nearby-connections/device-report.sh` để ghi nhận có thể lặp lại; hiện ADB chưa thấy máy nào.
+1. **NBY-03/04:** từ chối quyền Nearby tại hộp hệ thống, tắt Bluetooth/Wi-Fi trong phiên, và thử đảo vai Android 11 host / Android 15 guest. Dùng [bảng kiểm thiết bị thật](NBY-04_DEVICE_RUNBOOK.md) và `plugins/nearby-connections/device-report.sh` để ghi nhận có thể lặp lại; kiểm tra ngày 11/11 ADB chỉ thấy một máy Android 15.
 2. **NBY-05:** cần thêm hai Android thật để thử một host và ba guest với `P2P_STAR`, đo thời gian vào phòng và độ ổn định. Chưa thể quyết định Go/No-Go cho chế độ 2–4 người.
 3. Sau cổng Go/No-Go: hoàn thiện lifecycle/timeout/retry, tích hợp game protocol và UI phòng, rồi QA quyền riêng tư/Data safety trước khi cân nhắc phát hành.
 
