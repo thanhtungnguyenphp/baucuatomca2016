@@ -2,9 +2,19 @@
 
 **Nhánh:** `codex/feature-nearby-connections`
 
-**Trạng thái (11/11/2026):** demo transport đã qua kiểm thử hai máy thật ngày 06/11; chưa tích hợp chế độ chơi Nearby vào game phát hành. Backlog: 3 task hoàn thành, 2 đang kiểm thử biên, 1 chờ đủ bốn thiết bị, 7 chờ phụ thuộc.
+**Trạng thái (15/11/2026):** plugin Nearby đã được bật trong game trên nhánh tính năng. Đã có màn hình tạo/tìm phòng, xác thực mã, chơi 2–4 người với chủ phòng lắc tô, đồng bộ 5 lượt/điểm và chơi lại. APK debug đã xuất; bản Google Play hiện tại chưa có tính năng này. Còn cần kiểm thử phòng game trên nhiều điện thoại thật, reconnect và rà soát quyền riêng tư trước khi phát hành.
 
-## Kiểm tra hiện tại — 11/11/2026
+
+## Tích hợp game — 15/11/2026
+
+- Bật `godot_nearby` trong export Android; game dùng `PartyNearbyAdapter` riêng với giao thức JSON v1, `room_id`, số thứ tự tin nhắn và `service_id` riêng. Plugin vận chuyển không chứa luật game.
+- Tạo/tìm phòng `P2P_STAR`, host giữ tối đa ba guest. Hai phía đối chiếu mã xác thực Nearby trước khi chấp nhận. Host cũng là người chơi ghế 0 và là người duy nhất lắc, tạo ba kết quả, cộng điểm và phát snapshot. Khách chỉ gửi lựa chọn; host kiểm tra ghế, lượt, biểu tượng và trạng thái.
+- Nếu guest rời khi đang chơi, host dừng ván và đưa những người còn lại về lobby. Nếu mất host, guest kết thúc phòng rõ ràng. Reconnect giữ ghế/chơi tiếp **chưa triển khai**. Phòng tự đóng khi ứng dụng chuyển nền; bỏ qua tạm dừng do hộp xin quyền.
+- Test giả lập transport đã qua luồng 4 người × 5 lượt, đồng bộ điểm, rematch, chặn lựa chọn sai lượt/người lạ, và dừng ván khi mất guest. Test `PartyMatch` và core rules cũ cũng qua. Godot headless tải scene mới không lỗi.
+- APK debug package `vn.lamgame.baucuatomca.dev` xuất thành công; manifest có `BLUETOOTH_ADVERTISE`, `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`, `NEARBY_WIFI_DEVICES` và quyền Wi-Fi/vị trí theo phiên bản Android. Điện thoại ADB hiện chỉ có một máy; lần cài thử đầu tiên bị hệ thống báo `INSTALL_FAILED_USER_RESTRICTED`, đang chờ người dùng cho phép cài qua USB. Chưa có bằng chứng trận chơi Nearby trên thiết bị thật cho bản game này.
+- Chưa tăng version code, chưa tạo AAB phát hành, chưa cập nhật chính sách quyền riêng tư/Data safety trên Store. Các bước này thuộc NBY-12/13 sau QA thiết bị.
+
+## Kiểm tra lịch sử — 11/11/2026
 
 - Nhánh tính năng đồng bộ với `origin`; chưa có thay đổi code mới sau commit chuẩn bị kiểm thử `ca9661f` trước lần cập nhật trạng thái này.
 - ADB hiện thấy **một** điện thoại Android 15 (model `23021RAAEG`), chưa thấy điện thoại Android 11 hoặc hai máy bổ sung. Trên máy này Bluetooth, Wi-Fi, Location đều bật; Google Play services và demo Godot Nearby có mặt, các quyền Nearby runtime đã được cấp. Package game phát hành `vn.lamgame.baucuatomca` vẫn có mặt.

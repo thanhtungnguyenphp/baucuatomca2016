@@ -1,6 +1,6 @@
 # Backlog triển khai Nearby Connections
 
-**Trạng thái (11/11/2026):** 3 hoàn thành, 2 đang kiểm thử, 1 chờ đủ thiết bị, 7 chưa triển khai hoặc chờ phụ thuộc. Xem [tiến độ và bằng chứng kiểm thử](PROGRESS.md).
+**Trạng thái (15/11/2026):** NBY-09/10 đã có code game, test mô phỏng 4 người và APK debug; chưa qua kiểm thử phòng game trên hai điện thoại thật. NBY-11 mới có dừng ván khi mất kết nối và chơi lại, chưa có reconnect. Xem [tiến độ và bằng chứng kiểm thử](PROGRESS.md).
 **Ưu tiên:** P0 = chứng minh khả thi và khóa ranh giới plugin; P1 = hoàn thiện tính năng; P2 = kiểm thử và phát hành.
 **Ước lượng:** ngày công kỹ thuật, chưa tính thời gian chờ thiết bị hoặc duyệt Store.
 
@@ -14,9 +14,9 @@
 | 6 | NBY-06 | P1 | Chờ NBY-05 | Hoàn thiện core: state machine, timeout, retry có giới hạn, callback main thread, giới hạn bytes, dọn tài nguyên, test unit. | 05 | 3–5 ngày | Test state/error/cleanup qua; không rò kết nối sau `stop_all()`. |
 | 7 | NBY-07 | P1 | Chờ NBY-06; đã có khung addon | Khóa API Godot, đóng gói addon versioned, tài liệu tích hợp, changelog, demo độc lập. | 06 | 2–3 ngày | Dùng addon trong một dự án Godot trống và core trong app Kotlin demo. |
 | 8 | NBY-08 | P1 | Hoàn thành | Tách `PartyMatch` thuần khỏi `party_mode.gd`; giữ nguyên chế độ chơi cùng máy và test luật năm lượt. | 01 | 2–3 ngày | Local party cho kết quả/điểm như trước; không phụ thuộc plugin. |
-| 9 | NBY-09 | P1 | Chờ NBY-07 | Giao thức Bầu Cua v1 và `PartyNearbyAdapter`: host authoritative, sequence, snapshot, xác thực message. | 07, 08 | 3–4 ngày | Thông điệp lặp/cũ/sai lượt không gây cộng điểm sai. |
-| 10 | NBY-10 | P1 | Chờ NBY-09 | UX phòng: tạo/tìm phòng, quyền, mã xác thực, ready, 2–4 người, lỗi rõ ràng. | 09 | 3–5 ngày | Người mới vào phòng và chơi được không cần hướng dẫn ngoài app; Local party vẫn truy cập được. |
-| 11 | NBY-11 | P1 | Chờ NBY-10 | Xử lý rời phòng, mất kết nối, guest nối lại/snapshot, chơi lại; điều chỉnh vị trí quảng cáo. | 10 | 3–5 ngày | Không treo trận; mọi máy đồng bộ hoặc thoát phòng rõ ràng sau lỗi. |
+| 9 | NBY-09 | P1 | Đã triển khai, chờ QA thiết bị | Giao thức Bầu Cua v1 và `PartyNearbyAdapter`: host authoritative, sequence, snapshot, xác thực message. | 07, 08 | 3–4 ngày | Thông điệp lặp/cũ/sai lượt không gây cộng điểm sai. |
+| 10 | NBY-10 | P1 | Đã triển khai, chờ QA thiết bị | UX phòng: tạo/tìm phòng, quyền, mã xác thực, ready, 2–4 người, lỗi rõ ràng. | 09 | 3–5 ngày | Người mới vào phòng và chơi được không cần hướng dẫn ngoài app; Local party vẫn truy cập được. |
+| 11 | NBY-11 | P1 | Một phần | Xử lý rời phòng, mất kết nối, guest nối lại/snapshot, chơi lại; điều chỉnh vị trí quảng cáo. | 10 | 3–5 ngày | Không treo trận; mọi máy đồng bộ hoặc thoát phòng rõ ràng sau lỗi. |
 | 12 | NBY-12 | P2 | Chờ NBY-11 | Ma trận QA thiết bị thật, hiệu năng và hồi quy UI/UX, kiểm tra AAB/manifest. | 11 | 3–5 ngày | 2/3/4 máy chơi trọn năm lượt và rematch; các tình huống mất quyền/radio/mạng có kết quả mong đợi. |
 | 13 | NBY-13 | P2 | Chờ NBY-12 | Cập nhật Privacy Policy/Data safety, mô tả quyền, release note, internal testing và quyết định phát hành. | 12 | 1–2 ngày | Nội dung Store khớp SDK/manifest thực tế; internal test qua trước khi phát hành. |
 

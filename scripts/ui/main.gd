@@ -205,6 +205,13 @@ func _build_journey_ui() -> void:
 	party_button.pressed.connect(_show_party)
 	_style_sheet_button(party_button)
 	content.add_child(party_button)
+	var nearby_button := Button.new()
+	nearby_button.text = "CHƠI GẦN NHAU · 2–4 NGƯỜI"
+	nearby_button.custom_minimum_size.y = 76
+	nearby_button.add_theme_font_size_override("font_size", 27)
+	nearby_button.pressed.connect(_show_nearby_party)
+	_style_sheet_button(nearby_button)
+	content.add_child(nearby_button)
 	var close_button := Button.new()
 	close_button.text = "ĐÓNG"
 	close_button.custom_minimum_size.y = 82
@@ -313,6 +320,10 @@ func _position_bottom_actions(banner_visible: bool) -> void:
 func _show_party() -> void:
 	journey_popup.hide()
 	get_tree().change_scene_to_file("res://scenes/PartyMode.tscn")
+
+func _show_nearby_party() -> void:
+	journey_popup.hide()
+	get_tree().change_scene_to_file("res://scenes/NearbyPartyMode.tscn")
 
 func _place_bet(symbol: String) -> void:
 	if GameSession.place_bet(symbol):
