@@ -26,6 +26,9 @@ var _interstitial: InterstitialAd
 var _rewarded: RewardedAd
 var _loading_interstitial := false
 var _loading_rewarded := false
+var _initializing_ads := false
+var _ads_initialized := false
+var _ads_load_started := false
 var _banner_visible := false
 var _fullscreen_ad_active := false
 var _reward_request_id := ""
@@ -70,9 +73,31 @@ func _start_ads_if_permitted() -> void:
 		print("[AdMob] Ads waiting for consent, status: ", status)
 		ad_status_changed.emit("Ads waiting for valid consent state: %s" % status)
 		return
-	print("[AdMob] Starting banner and interstitial loading")
+	if _ads_initialized:
+		_load_ads()
+		return
+	if _initializing_ads:
+		return
+	_initializing_ads = true
+	print("[AdMob] Initializing Google Mobile Ads SDK")
+	ad_status_changed.emit("Initializing Mobile Ads SDK")
+	var listener := OnInitializationCompleteListener.new()
+	listener.on_initialization_complete = _on_mobile_ads_initialized
+	MobileAds.initialize(listener)
+
+func _on_mobile_ads_initialized(_status: InitializationStatus) -> void:
+	_initializing_ads = false
+	_ads_initialized = true
+	print("[AdMob] Mobile Ads SDK initialized")
+	ad_status_changed.emit("Mobile Ads SDK initialized")
+	_load_ads()
+
+func _load_ads() -> void:
+	if not _ads_initialized or _ads_load_started:
+		return
+	_ads_load_started = true
+	print("[AdMob] Starting banner, interstitial and rewarded loading")
 	ad_status_changed.emit("Loading ads")
-	MobileAds.initialize()
 	var banner_id := TEST_BANNER_UNIT_ID if OS.is_debug_build() else BANNER_UNIT_ID
 	var banner_size := AdSize.get_current_orientation_anchored_adaptive_banner_ad_size(AdSize.FULL_WIDTH)
 	if banner_size.width <= 0 or banner_size.height <= 0:

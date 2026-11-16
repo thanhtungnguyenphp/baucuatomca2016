@@ -12,19 +12,19 @@
 - NBY-17 hoàn thành: màn hình Nearby dùng adapter v2; host có badge dealer, không có seat/đường đặt, thấy cược và ready của client, chỉ lắc khi phase `locked`. Test UI host headless đã qua. NBY-18 đang thực hiện.
 - NBY-18 hoàn thành: client có balance, sáu chip, đặt nhiều cửa, xóa/xác nhận và khóa UI sau confirm; hết Lộc hiển thị spectator và không chặn host. Test UI client, host và protocol v2 đều qua. NBY-19 đang thực hiện.
 - NBY-19 hoàn thành: kết quả, payout/net của từng client và leaderboard được lấy từ snapshot authoritative; test năm lượt xác nhận rank giống nhau, ad bonus không vào `total_net` và rematch reset dữ liệu phiên.
-- NBY-20 hoàn thành: preload Rewarded, chỉ gửi claim sau callback earned, host chống request trùng và lifecycle quảng cáo toàn màn hình không đóng phòng. Production ID `ca-app-pub-6352554924566967/7706970639` đã được cấu hình; debug vẫn dùng Google test ID. NBY-21 đang thực hiện.
-- NBY-21 hoàn thành code/test: banner dùng anchored adaptive size, Main/Nearby chỉ dành vùng dưới khi native banner báo loaded và trả lại không gian khi no-fill. Test layout qua ở 720×1650 và 1080×2400; bổ sung trạng thái chẩn đoán consent/load. AdMob vẫn cần publisher sửa UMP Privacy & messaging để trạng thái consent không còn `UNKNOWN`. NBY-22 đang thực hiện.
+- NBY-20 hoàn thành: preload Rewarded, chỉ gửi claim sau callback earned, host chống request trùng và lifecycle quảng cáo toàn màn hình không đóng phòng. Production ID `ca-app-pub-6352554924566967/7706970639` đã được cấu hình; debug vẫn dùng Google test ID.
+- NBY-21 hoàn thành và xác minh máy thật 17/11/2026: banner dùng anchored adaptive size, Main/Nearby chỉ dành vùng dưới khi native banner báo loaded và trả lại không gian khi no-fill. UMP publisher đã nhận message, consent trả `NOT_REQUIRED`; Mobile Ads SDK, Banner, Interstitial và Rewarded đều load thành công trên Android 11. Đã sửa crash do gọi load ad trước callback `MobileAds.initialize`.
 - Đã chốt hướng kiến trúc trong tài liệu: tổng tối đa bốn thiết bị gồm một dealer host và một đến ba client. Host không đặt cược, không có balance và không xuất hiện trên leaderboard.
 - Đã bổ sung backlog NBY-14–23 cho model balance/bets, protocol v2, UI host/client, payout/leaderboard, Rewarded Ad, banner/UMP, QA bốn máy và release readiness.
 - Adapter/model v1 vẫn được giữ song song để hồi quy; màn hình Nearby hiện dùng protocol/model v2.
-- AdMob App ID cùng banner, interstitial và rewarded production ID đã nằm trong code. Log máy thật báo UMP publisher misconfiguration/no form và ads chờ consent status 0; lỗi cấu hình publisher này vẫn cần sửa trong AdMob Privacy & messaging.
+- AdMob App ID cùng banner, interstitial và rewarded production ID đã nằm trong code. UMP Privacy & messaging và URL chính sách quyền riêng tư đã được publisher hoàn tất, xác minh runtime thành công.
 
 ## NBY-22 QA v2 đang thực hiện — 16/11/2026
 
 - Toàn bộ regression tự động qua: core rules, engagement, local `PartyMatch`/PartyFlow, Nearby v1, `DealerPartyMatch`, protocol v2, UI host/client, payout/leaderboard/rematch, portrait layout và banner layout 720×1650/1080×2400.
 - Export APK debug v2 thành công tại `export/android/bau-cua-tom-ca-debug.apk`, dung lượng khoảng 210 MB, SHA-256 `b25b013084e96f671be2200efce365acefb3789e178e945cf48a27abd093c605`.
 - Cài đè package `vn.lamgame.baucuatomca.dev` thành công trên điện thoại Redmi Android 15/API 35 `23021RAAEG` và máy tính bảng Samsung Android 16/API 36 `SM-X110`. Cả hai cùng chạy version `1.2.0`/code `5`, vào foreground, không có crash hoặc ANR lúc khởi động.
-- Cả hai máy cùng báo UMP publisher misconfiguration vì App ID chưa có form được cấu hình; game vẫn chạy nhưng banner/rewarded chưa được tải cho đến khi publisher tạo và publish message trong AdMob Privacy & messaging.
+- Lỗi UMP publisher misconfiguration trước đó đã được xử lý ngày 17/11/2026. Lần xác minh mới phát hiện và sửa crash thứ tự SDK initialization; sau khi cài lại, tiến trình sống ổn định và cả ba định dạng quảng cáo debug đều load.
 - Chưa chạy host–client đủ năm lượt/rematch, disconnect/background rewarded hoặc cổng một host + ba client. NBY-22 giữ trạng thái đang thực hiện.
 
 
@@ -89,6 +89,6 @@
 
 1. **NBY-22 hai máy:** mở khóa Android 15 và kết nối lại Android 11; chơi đủ năm lượt theo cả hai chiều host/client, rematch, rời phòng và rewarded lifecycle.
 2. **NBY-05/NBY-22 bốn máy:** cần thêm hai Android thật để thử một host và ba client với `P2P_STAR`; chưa thể quyết định Go/No-Go bốn thiết bị.
-3. **NBY-23:** chỉ bắt đầu sau cổng QA; Rewarded production ID đã có, còn cần sửa/publish UMP message trong AdMob Privacy & messaging trước release.
+3. **NBY-23:** chỉ bắt đầu sau cổng QA; Rewarded production ID và UMP message đã sẵn sàng, còn cập nhật Store/Data safety/version/build sau khi multiplayer đạt.
 
 **Không thực hiện ở giai đoạn này:** build AAB phát hành, tăng version code hoặc gửi bản lên Store.
