@@ -64,25 +64,34 @@ IDLE → CHECKING → ADVERTISING / DISCOVERING → PAIRING
 
 ## 5. Tích hợp riêng cho Bầu Cua
 
-`party_mode.gd` hiện gộp UI với state chơi cùng một máy. Bước tích hợp cần rút logic năm lượt và tính điểm thành mô hình thuần `PartyMatch`; cả chế độ cục bộ và Nearby dùng mô hình này. Giao diện hiện tại không gọi trực tiếp Kotlin plugin; nó đi qua `PartyNearbyAdapter`. Đây là thay đổi của game, không nằm trong gói plugin.
+`party_mode.gd` hiện gộp UI với state chơi cùng một máy. Bản thử v1 đã rút logic năm lượt thành `PartyMatch` và đi qua `PartyNearbyAdapter`. Bản v2 tiếp tục tách model thuần nhưng đổi ý nghĩa seat: host là dealer, không nằm trong mảng người chơi; chỉ một đến ba client có balance, bets và leaderboard. Đây là thay đổi của game, không nằm trong gói plugin.
 
 Envelope thông điệp game đề xuất:
 
 ```json
 {
-  "protocol_version": 1,
+  "protocol_version": 2,
   "room_id": "...",
   "round_id": 3,
   "seq": 12,
-  "type": "CHOICE",
+  "type": "PLACE_BET",
   "player_id": "...",
-  "payload": {"symbol": "bau"}
+  "payload": {"symbol": "bau", "amount": 10000, "action_id": "..."}
 }
 ```
 
-Các loại bản đầu: `HELLO`, `LOBBY`, `READY`, `CHOICE`, `ROUND_RESULT`, `SCORE`, `SNAPSHOT`, `REMATCH`, `LEAVE`, `ERROR`. Host là nguồn sự thật: chỉ host quay ba kết quả, xác thực lựa chọn và tính điểm, phát `ROUND_RESULT`/`SCORE`; guest chỉ hiển thị trạng thái được host xác nhận. Game phải kiểm tra `protocol_version`, giới hạn payload, loại biểu tượng, số lượt, `seq`, `room_id`, người gửi và trạng thái hiện tại; bỏ qua thông điệp lặp/cũ. Không nhận kết quả quay do guest gửi. Không cho vào phòng khi ván đã bắt đầu.
+Các loại v2: `HELLO`, `PLACE_BET`, `CLEAR_BETS`, `CONFIRM_BETS`, `REWARD_CLAIM`, `STATE`, `BET_ACCEPTED`, `BET_REJECTED`, `ROUND_RESULT`, `REWARD_RESULT`, `LEAVE`, `ERROR`. Host là nguồn sự thật: chỉ host quay ba kết quả, xác thực cược, trừ stake, tính payout/rank và phát snapshot. Client chỉ gửi ý định và hiển thị trạng thái host xác nhận. Game kiểm tra `protocol_version`, payload, biểu tượng, amount, round, `seq`, `action_id`, `room_id`, endpoint và phase; bỏ message lặp/cũ. Không nhận balance, payout, result hoặc leaderboard do client gửi. V1 và v2 phải từ chối nhau với thông báo phiên bản rõ ràng.
 
-Trong phòng Nearby, tránh hiển thị quảng cáo xen giữa lượt hoặc khi đang xác nhận kết nối. Chế độ cục bộ tiếp tục dùng được nếu không có quyền hoặc Google Play services.
+State machine gameplay v2:
+
+```text
+LOBBY → BETTING → LOCKED → ROLLING → REVEALED → SETTLED
+                                  ↘ NEXT_ROUND / FINISHED
+```
+
+Host không có balance và không được gọi API đặt cược. Client hết balance chuyển thành spectator, không tham gia điều kiện `all_ready` và có thể trở lại ở lượt kế sau khi nhận rewarded grant. Leaderboard xếp theo `total_net`, số lượt thắng rồi thứ tự ghế; rewarded grant không cộng `total_net`.
+
+Trong phòng Nearby, không tự hiện interstitial khi ghép nối, đặt cược hoặc reveal. Banner được neo dưới vùng hành động với safe area riêng. Rewarded ad chỉ mở khi client chủ động bấm nhận thêm Lộc; lifecycle phải phân biệt pause do quảng cáo với pause thật để không đóng phòng. AdMob thuộc game layer và không được thêm vào `nearby-core` hoặc Godot bridge. Chế độ cục bộ tiếp tục dùng được nếu không có quyền hoặc Google Play services.
 
 ## 6. Quyền, dữ liệu và khả năng phát hành
 

@@ -1,7 +1,7 @@
 # Nearby Connections: kế hoạch plugin dùng lại
 
-**Trạng thái:** đang triển khai trên nhánh `codex/feature-nearby-connections`; xem [tổng kết nhánh](BRANCH_REVIEW.md) và [tiến độ](PROGRESS.md).
-**Ngày:** 06/11/2026.
+**Trạng thái:** transport và game v1 đã chạy trên hai máy; phiên bản tối ưu host chỉ điều khiển bàn đang ở bước tài liệu/chờ duyệt, chưa triển khai code. Xem [kế hoạch v2](MULTIPLAYER_V2_PLAN.md) và [tiến độ](PROGRESS.md).
+**Ngày cập nhật:** 16/11/2026.
 **Ứng dụng tham chiếu:** Bầu Cua Tôm Cá — Lộc Xuân, Godot 4.7.1, Android.
 
 ## Quyết định đề xuất
@@ -18,8 +18,9 @@ Mỗi ứng dụng cấp `service_id` riêng khi chạy. Plugin không gắn c�
 ## Phạm vi bản đầu
 
 - Android, Godot 4.7.x, 2–4 thiết bị, topology `P2P_STAR`, một host quyết định trạng thái ván.
+- Mô hình v2: một host chỉ điều khiển bàn và một đến ba client đặt Lộc; host không phải người chơi.
 - Gửi `BYTES` payload nhỏ; không chuyển file/stream.
-- Vào phòng, xác nhận mã xác thực kết nối, chơi năm lượt, xem điểm, chơi lại hoặc rời phòng.
+- Vào phòng, xác nhận mã kết nối, client đặt cược, host lắc, đồng bộ payout/leaderboard, chơi lại hoặc rời phòng.
 - Thiết bị không hỗ trợ Nearby vẫn chơi được chế độ cục bộ.
 - Bản đầu không cần tài khoản, máy chủ Internet, ghép trận từ xa hoặc giao dịch giá trị thật.
 
@@ -30,7 +31,7 @@ Mỗi ứng dụng cấp `service_id` riêng khi chạy. Plugin không gắn c�
 3. Chấp nhận cập nhật chính sách quyền riêng tư và Data safety trước khi phát hành, vì Google cho biết Nearby SDK thu thập một số dữ liệu sử dụng và thiết bị.
 4. Xác nhận quy tắc sản phẩm: tối đa bốn người, năm lượt, host rời thì kết thúc phòng, không vào giữa ván.
 
-Xem [kiến trúc](ARCHITECTURE.md), [backlog theo ưu tiên](TASKS.md) và [bảng kiểm NBY-03/04 trên thiết bị thật](NBY-04_DEVICE_RUNBOOK.md).
+Xem [kế hoạch gameplay v2](MULTIPLAYER_V2_PLAN.md), [kiến trúc](ARCHITECTURE.md), [backlog theo ưu tiên](TASKS.md) và [bảng kiểm thiết bị thật](NBY-04_DEVICE_RUNBOOK.md).
 
 ## Tài liệu chính thức
 

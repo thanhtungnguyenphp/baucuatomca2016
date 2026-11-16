@@ -71,4 +71,4 @@ Chi tiết các đầu vào thuộc publisher và quy trình release: `RELEASE_C
 
 ## Kế hoạch chơi gần nhau (đang triển khai)
 
-Thiết kế plugin Nearby Connections tái sử dụng và backlog theo thứ tự ưu tiên nằm trong [`nearby/README.md`](nearby/README.md), [`nearby/ARCHITECTURE.md`](nearby/ARCHITECTURE.md) và [`nearby/TASKS.md`](nearby/TASKS.md). Tiến độ hiện tại nằm trong [`nearby/PROGRESS.md`](nearby/PROGRESS.md); màn hình Nearby đã có trên nhánh tính năng nhưng chưa phát hành lên Google Play.
+Thiết kế plugin Nearby Connections tái sử dụng và backlog theo thứ tự ưu tiên nằm trong [`nearby/README.md`](nearby/README.md), [`nearby/ARCHITECTURE.md`](nearby/ARCHITECTURE.md) và [`nearby/TASKS.md`](nearby/TASKS.md). Kế hoạch gameplay host chỉ điều khiển bàn, client đặt cược, leaderboard và quảng cáo nằm trong [`nearby/MULTIPLAYER_V2_PLAN.md`](nearby/MULTIPLAYER_V2_PLAN.md). Tiến độ hiện tại nằm trong [`nearby/PROGRESS.md`](nearby/PROGRESS.md); v2 mới ở bước tài liệu, chưa bắt đầu triển khai code và chưa phát hành lên Google Play.

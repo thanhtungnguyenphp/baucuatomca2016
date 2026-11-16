@@ -323,7 +323,7 @@ func _show_party() -> void:
 
 func _show_nearby_party() -> void:
 	journey_popup.hide()
-	get_tree().change_scene_to_file("res://scenes/NearbyPartyMode.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/NearbyPartyMode.tscn")
 
 func _place_bet(symbol: String) -> void:
 	if GameSession.place_bet(symbol):

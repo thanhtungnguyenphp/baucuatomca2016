@@ -62,6 +62,10 @@ class NearbyTransport(context: Context, private val listener: NearbyListener) {
     private var advertising = false
     private var discovering = false
     private var generation = 0
+    // Some Play services builds require location on T+ discovery despite Nearby permissions.
+    // Request each permission only after the SDK explicitly reports that it is missing.
+    private var discoveryNeedsApproximateLocation = false
+    private var discoveryNeedsPreciseLocation = false
     @Volatile private var currentState = "IDLE"
 
     fun state(): String = currentState
@@ -74,6 +78,12 @@ class NearbyTransport(context: Context, private val listener: NearbyListener) {
         when {
             Build.VERSION.SDK_INT <= 28 -> permissions += Manifest.permission.ACCESS_COARSE_LOCATION
             Build.VERSION.SDK_INT <= 32 -> permissions += Manifest.permission.ACCESS_FINE_LOCATION
+        }
+        if (Build.VERSION.SDK_INT >= 33 && discoveryNeedsApproximateLocation) {
+            permissions += Manifest.permission.ACCESS_COARSE_LOCATION
+        }
+        if (Build.VERSION.SDK_INT >= 33 && discoveryNeedsPreciseLocation) {
+            permissions += Manifest.permission.ACCESS_FINE_LOCATION
         }
         if (Build.VERSION.SDK_INT >= 31) {
             permissions += Manifest.permission.BLUETOOTH_ADVERTISE
@@ -294,6 +304,12 @@ class NearbyTransport(context: Context, private val listener: NearbyListener) {
 
     private fun sdkError(operation: String, exception: Exception) {
         val status = (exception as? ApiException)?.statusCode
+        if (operation == "startDiscovery" && status == ConnectionsStatusCodes.MISSING_PERMISSION_ACCESS_COARSE_LOCATION) {
+            discoveryNeedsApproximateLocation = true
+        }
+        if (operation == "startDiscovery" && status == ConnectionsStatusCodes.MISSING_PERMISSION_ACCESS_FINE_LOCATION) {
+            discoveryNeedsPreciseLocation = true
+        }
         error(if (status == null) "SDK_ERROR" else "SDK_$status", operation)
     }
 

@@ -26,6 +26,8 @@ var _endpoints: Array[String] = [] # seat 1..3, host only
 var _last_seq: Dictionary = {}
 var _seq := 0
 var _pending_action := ""
+var _discovery_coarse_retry_attempted := false
+var _discovery_fine_retry_attempted := false
 var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
@@ -37,9 +39,7 @@ func _ready() -> void:
 	nearby.endpoint_disconnected.connect(_on_endpoint_disconnected)
 	nearby.payload_received.connect(_on_payload)
 	nearby.permission_result.connect(_on_permission_result)
-	nearby.error.connect(func(code: String, operation: String) -> void:
-		notice.emit("Kết nối lỗi: %s (%s)" % [code, operation])
-	)
+	nearby.error.connect(_on_nearby_error)
 
 func _exit_tree() -> void:
 	nearby.stop_all()
@@ -153,8 +153,25 @@ func leave() -> void:
 	_last_seq.clear()
 	_seq = 0
 	_pending_action = ""
+	_discovery_coarse_retry_attempted = false
+	_discovery_fine_retry_attempted = false
 	rooms_changed.emit()
 	changed.emit()
+
+func _on_nearby_error(code: String, operation: String) -> void:
+	if mode == "guest" and operation == "startDiscovery" and code == "SDK_8034" and not _discovery_coarse_retry_attempted:
+		_discovery_coarse_retry_attempted = true
+		_pending_action = "guest"
+		notice.emit("Máy này cần thêm quyền vị trí gần đúng để tìm phòng ở gần.")
+		nearby.request_permissions()
+		return
+	if mode == "guest" and operation == "startDiscovery" and code == "SDK_8036" and not _discovery_fine_retry_attempted:
+		_discovery_fine_retry_attempted = true
+		_pending_action = "guest"
+		notice.emit("Máy này cần thêm quyền vị trí chính xác để tìm phòng ở gần.")
+		nearby.request_permissions()
+		return
+	notice.emit("Kết nối lỗi: %s (%s)" % [code, operation])
 
 func _start_with_permissions(action: String) -> void:
 	_pending_action = action
@@ -174,8 +191,10 @@ func _on_permission_result(granted: bool, missing: PackedStringArray) -> void:
 func _run_pending_action() -> void:
 	if _pending_action == "host" and mode == "host":
 		nearby.start_advertising(SERVICE_ID, local_name, "STAR")
+		notice.emit("Phòng đã sẵn sàng. Chờ bạn bè tìm thấy và vào phòng.")
 	elif _pending_action == "guest" and mode == "guest":
 		nearby.start_discovery(SERVICE_ID, "STAR")
+		notice.emit("Đang tìm phòng ở gần…")
 	_pending_action = ""
 
 func _on_endpoint_found(id: String, name: String) -> void:
@@ -230,6 +249,8 @@ func _on_endpoint_disconnected(id: String) -> void:
 		local_seat = -1
 		state.clear()
 		players.clear()
+		rooms.clear()
+		rooms_changed.emit()
 		notice.emit("Chủ phòng đã ngắt kết nối. Ván chơi kết thúc.")
 		changed.emit()
 	elif mode == "host" and _endpoints.has(id):
@@ -281,6 +302,8 @@ func _on_payload(id: String, bytes: PackedByteArray) -> void:
 			host_endpoint = ""
 			state.clear()
 			players.clear()
+			rooms.clear()
+			rooms_changed.emit()
 			local_seat = -1
 			notice.emit("Chủ phòng đã đóng phòng.")
 			changed.emit()

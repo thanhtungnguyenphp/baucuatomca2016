@@ -3,8 +3,10 @@ extends Control
 const MASCOT_CARD_SCENE := preload("res://scenes/components/MascotCard.tscn")
 const BOWL_SCENE := preload("res://scenes/components/Bowl.tscn")
 const SPRING_BACKGROUND := preload("res://assets/art/spring-lucky-background.png")
+const DealerPartyMatchScript := preload("res://scripts/core/dealer_party_match.gd")
+const PartyNearbyAdapterV2Script := preload("res://scripts/core/party_nearby_adapter_v2.gd")
 
-var room := PartyNearbyAdapter.new()
+var room = PartyNearbyAdapterV2Script.new()
 var _rooms_box: VBoxContainer
 var _rooms_caption: Label
 var _lobby: VBoxContainer
@@ -12,28 +14,43 @@ var _board: VBoxContainer
 var _name_edit: LineEdit
 var _status: Label
 var _room_label: Label
+var _role_label: Label
 var _players_label: Label
 var _scores_label: Label
 var _instruction: Label
 var _action: Button
+var _client_controls: VBoxContainer
+var _client_balance: Label
+var _clear_bets_button: Button
+var _confirm_bets_button: Button
+var _reward_button: Button
+var _content_margin: MarginContainer
 var _bowl: BowlPresenter
 var _cards: Dictionary = {}
+var _chip_buttons: Dictionary = {}
 var _verify_dialog: ConfirmationDialog
 var _pending_endpoint := ""
 var _shown_phase := ""
 var _animating := false
+var _selected_chip := 10_000
+var _pending_reward_id := ""
 
 func _enter_tree() -> void:
 	get_tree().quit_on_go_back = false
 
 func _ready() -> void:
-	get_window().go_back_requested.connect(_go_back)
+	get_window().go_back_requested.connect(func() -> void: call_deferred("_go_back"))
 	add_child(room)
 	_build_ui()
 	room.changed.connect(_refresh)
 	room.rooms_changed.connect(_refresh_rooms)
 	room.notice.connect(func(message: String) -> void: _status.text = message)
 	room.verification_needed.connect(_on_verification_needed)
+	AdPlacement.rewarded_availability_changed.connect(_on_rewarded_availability_changed)
+	AdPlacement.rewarded_earned.connect(_on_rewarded_earned)
+	AdPlacement.rewarded_failed.connect(_on_rewarded_failed)
+	AdPlacement.banner_visibility_changed.connect(_on_banner_visibility_changed)
+	_on_banner_visibility_changed(AdPlacement.is_banner_visible())
 	_refresh()
 	if not room.available():
 		_status.text = "Cần điện thoại Android có Google Play services để chơi gần nhau."
@@ -42,15 +59,15 @@ func _exit_tree() -> void:
 	room.leave()
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_PAUSED and is_instance_valid(room) and not room.is_requesting_permissions():
+	if what == NOTIFICATION_APPLICATION_PAUSED and is_instance_valid(room) and not room.is_requesting_permissions() and not AdPlacement.is_fullscreen_ad_active():
 		room.leave()
 		if is_instance_valid(_status):
 			_status.text = "Phòng đã đóng khi ứng dụng chuyển nền. Hãy tạo hoặc tìm lại phòng."
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
-		_go_back()
 		get_viewport().set_input_as_handled()
+		call_deferred("_go_back")
 
 func _build_ui() -> void:
 	var backdrop := TextureRect.new()
@@ -67,10 +84,11 @@ func _build_ui() -> void:
 	add_child(veil)
 	veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var margin := MarginContainer.new()
+	_content_margin = margin
 	for side in ["left", "right"]:
 		margin.add_theme_constant_override("margin_" + side, 38)
 	margin.add_theme_constant_override("margin_top", 54)
-	margin.add_theme_constant_override("margin_bottom", 210)
+	margin.add_theme_constant_override("margin_bottom", 120)
 	add_child(margin)
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var content := VBoxContainer.new()
@@ -79,7 +97,7 @@ func _build_ui() -> void:
 	var header := HBoxContainer.new()
 	content.add_child(header)
 	var back := _button("‹ VỀ", 27, 150, 68)
-	back.pressed.connect(_go_back)
+	back.pressed.connect(func() -> void: call_deferred("_go_back"))
 	header.add_child(back)
 	var title := _label("CHƠI GẦN NHAU", 45, Color("ffe18a"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -95,6 +113,9 @@ func _build_ui() -> void:
 	_room_label = _label("", 32, Color("ffe18a"))
 	_room_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	content.add_child(_room_label)
+	_role_label = _label("", 27, Color("bdf0be"))
+	_role_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	content.add_child(_role_label)
 	_lobby = VBoxContainer.new()
 	_lobby.add_theme_constant_override("separation", 20)
 	_lobby.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -130,10 +151,10 @@ func _build_ui() -> void:
 	start.name = "StartButton"
 	start.pressed.connect(func() -> void:
 		if not room.start_match():
-			_status.text = "Cần ít nhất 2 người trong phòng để bắt đầu."
+			_status.text = "Cần ít nhất 1 máy con trong phòng để bắt đầu."
 	)
 	_lobby.add_child(start)
-	var lobby_note := _label("Tối đa 4 người. Chủ phòng là người lắc tô; mỗi người chọn 1 linh vật mỗi lượt. Chỉ tính điểm, không dùng Lộc.", 27, Color("ffe0a5"))
+	var lobby_note := _label("Tối đa 4 thiết bị: 1 chủ phòng điều khiển tô và 1–3 máy con đặt Lộc.", 27, Color("ffe0a5"))
 	_lobby.add_child(lobby_note)
 	_board = VBoxContainer.new()
 	_board.add_theme_constant_override("separation", 14)
@@ -163,10 +184,41 @@ func _build_ui() -> void:
 		card.pressed.connect(_choose.bind(symbol))
 		grid.add_child(card)
 		_cards[symbol] = card
+	_client_controls = VBoxContainer.new()
+	_client_controls.add_theme_constant_override("separation", 10)
+	_board.add_child(_client_controls)
+	_client_balance = _label("", 28, Color("ffe18a"))
+	_client_balance.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_client_controls.add_child(_client_balance)
+	var chip_grid := GridContainer.new()
+	chip_grid.columns = 3
+	chip_grid.add_theme_constant_override("h_separation", 10)
+	chip_grid.add_theme_constant_override("v_separation", 8)
+	_client_controls.add_child(chip_grid)
+	for value in GameConstants.CHIP_VALUES:
+		var chip := _button(_format_chip(value), 25, 0, 62, value == _selected_chip)
+		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		chip.pressed.connect(_select_chip.bind(value))
+		chip_grid.add_child(chip)
+		_chip_buttons[value] = chip
+	var bet_actions := HBoxContainer.new()
+	bet_actions.add_theme_constant_override("separation", 12)
+	_client_controls.add_child(bet_actions)
+	_clear_bets_button = _button("XÓA CƯỢC", 27, 0, 72)
+	_clear_bets_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_clear_bets_button.pressed.connect(_clear_bets)
+	bet_actions.add_child(_clear_bets_button)
+	_confirm_bets_button = _button("XÁC NHẬN ĐẶT", 27, 0, 72, true)
+	_confirm_bets_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_confirm_bets_button.pressed.connect(_confirm_bets)
+	bet_actions.add_child(_confirm_bets_button)
+	_reward_button = _button("XEM VIDEO · NHẬN 200K LỘC", 27, 0, 72, true)
+	_reward_button.pressed.connect(_watch_rewarded)
+	_client_controls.add_child(_reward_button)
 	_action = _button("", 31, 0, 88, true)
 	_action.pressed.connect(_on_bowl_tapped)
 	_board.add_child(_action)
-	var board_note := _label("Chủ phòng lắc và đậy tô · Mỗi mặt trùng được 1 điểm · 5 lượt", 26, Color("ffe0a5"))
+	var board_note := _label("Chủ phòng chỉ lắc, mở và đậy tô · Kết quả và trả thưởng đồng bộ đến mọi máy", 26, Color("ffe0a5"))
 	board_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_board.add_child(board_note)
 	_verify_dialog = ConfirmationDialog.new()
@@ -237,71 +289,119 @@ func _refresh_rooms() -> void:
 func _refresh() -> void:
 	if not is_instance_valid(_lobby):
 		return
-	var active := not room.state.is_empty()
+	var active: bool = not room.state.is_empty()
 	_lobby.visible = not active
 	_board.visible = active
 	_rooms_caption.visible = room.mode != "host" and room.local_seat < 0
 	_rooms_box.visible = _rooms_caption.visible
-	_room_label.text = "PHÒNG %s · %d/4 NGƯỜI" % [room.room_id, room.players.size()] if not room.room_id.is_empty() else ""
+	_room_label.text = "PHÒNG %s · 1 CHỦ + %d/3 NGƯỜI CHƠI" % [room.room_id, room.players.size()] if not room.room_id.is_empty() else ""
+	_role_label.text = "CHỦ PHÒNG · NGƯỜI LẮC" if room.mode == "host" else "MÁY CON · NGƯỜI ĐẶT" if room.mode == "guest" and room.local_seat >= 0 else ""
 	if room.mode == "host":
-		_players_label.text = "Trong phòng: " + ", ".join(room.players)
+		_players_label.text = "Máy con: " + ", ".join(room.players) if not room.players.is_empty() else "Chưa có máy con vào phòng."
 	elif room.mode == "guest":
 		_players_label.text = "Đã vào phòng: " + ", ".join(room.players) if room.local_seat >= 0 else "Đang tìm hoặc kết nối phòng…"
 	else:
 		_players_label.text = ""
 	var start: Button = _lobby.get_node("StartButton")
 	start.visible = room.mode == "host"
-	start.disabled = room.players.size() < 2 or room.players.size() > 4
+	start.disabled = room.players.is_empty() or room.players.size() > 3
 	_refresh_rooms()
 	if not active:
+		if room.mode == "guest" and room.local_seat >= 0:
+			_status.text = "Đã vào phòng. Chờ chủ phòng bắt đầu."
+		elif room.mode == "host" and not room.players.is_empty():
+			_status.text = "Đã có người chơi. Chủ phòng có thể bắt đầu ván."
 		_shown_phase = ""
 		return
+	_status.text = "Bạn là chủ phòng: theo dõi cược và điều khiển tô." if room.mode == "host" else "Đặt Lộc, xác nhận rồi chờ chủ phòng lắc tô."
 	var phase: String = str(room.state.get("phase", ""))
-	var turn: int = int(room.state.get("turn_number", 1))
-	var choices: Array = room.state.get("choices", [])
-	var scores: Array = room.state.get("scores", [])
-	var score_parts: Array[String] = []
-	for seat in scores.size():
-		score_parts.append("%s: %d" % [room.players[seat], scores[seat]])
-	_scores_label.text = "  ·  ".join(score_parts)
-	var my_choice := room.local_seat >= 0 and room.local_seat < choices.size() and not str(choices[room.local_seat]).is_empty()
-	var all_chosen := true
-	for choice: Variant in choices:
-		if str(choice).is_empty():
-			all_chosen = false
-	var is_host := room.mode == "host"
+	var turn: int = int(room.state.get("round_number", 1))
+	var match_players: Array = room.state.get("players", [])
+	var status_parts: Array[String] = []
+	if phase == "settled" or phase == "finished":
+		for row: Dictionary in room.state.get("leaderboard", []):
+			status_parts.append("%d. %s · %s · Dư %s" % [
+				int(row.get("rank", 0)),
+				row.get("name", "Người chơi"),
+				GameConstants.format_signed_luck(int(row.get("total_net", 0))),
+				GameConstants.format_luck(int(row.get("balance", 0))),
+			])
+	else:
+		for player: Dictionary in match_players:
+			var state_text := "KHÁN GIẢ" if player.get("spectator", false) else "ĐÃ CHỐT" if player.get("ready", false) else "ĐANG ĐẶT"
+			status_parts.append("%s · %s · %s" % [player.get("name", "Người chơi"), GameConstants.format_luck(int(player.get("balance", 0))), state_text])
+	_scores_label.text = "\n".join(status_parts)
+	var is_host: bool = room.mode == "host"
+	var local_player: Dictionary = room.get_local_player()
+	var local_ready := bool(local_player.get("ready", false))
+	var local_spectator := bool(local_player.get("spectator", false))
+	if not _pending_reward_id.is_empty() and not local_player.is_empty() and not local_spectator:
+		_pending_reward_id = ""
+	var local_total_bet := 0
+	for amount: Variant in local_player.get("bets", {}).values():
+		local_total_bet += int(amount)
+	var can_edit_bets := not is_host and phase == "betting" and not local_ready and not local_spectator and not _animating
+	_client_controls.visible = not is_host
+	_action.visible = is_host
+	if phase == "settled":
+		_client_balance.text = "NHẬN %s · LƯỢT NÀY %s · SỐ DƯ %s" % [
+			GameConstants.format_luck(int(local_player.get("round_payout", 0))),
+			GameConstants.format_signed_luck(int(local_player.get("round_net", 0))),
+			GameConstants.format_luck(int(local_player.get("balance", 0))),
+		]
+	elif phase == "finished":
+		var local_rank := 0
+		for row: Dictionary in room.state.get("leaderboard", []):
+			if row.get("player_id", "") == room.local_player_id:
+				local_rank = int(row.get("rank", 0))
+		_client_balance.text = "HẠNG %d · TỔNG %s · SỐ DƯ %s" % [local_rank, GameConstants.format_signed_luck(int(local_player.get("total_net", 0))), GameConstants.format_luck(int(local_player.get("balance", 0)))]
+	else:
+		_client_balance.text = "SỐ DƯ: %s · ĐANG ĐẶT: %s" % [GameConstants.format_luck(int(local_player.get("balance", 0))), GameConstants.format_luck(local_total_bet)]
+	_clear_bets_button.disabled = not can_edit_bets or local_total_bet <= 0
+	_confirm_bets_button.disabled = not can_edit_bets or local_total_bet <= 0
+	_reward_button.visible = local_spectator
+	_reward_button.disabled = not AdPlacement.is_rewarded_ready() or not _pending_reward_id.is_empty()
+	_reward_button.text = "XEM VIDEO · NHẬN 200K LỘC" if AdPlacement.is_rewarded_ready() else "ĐANG TẢI VIDEO THƯỞNG…"
+	for value in GameConstants.CHIP_VALUES:
+		var chip: Button = _chip_buttons[value]
+		chip.text = ("✓ " if value == _selected_chip else "") + _format_chip(value)
+		chip.disabled = not can_edit_bets
 	match phase:
-		"choose":
-			_instruction.text = "Lượt %d/5 · %s" % [turn, "Chạm tô để lắc" if all_chosen and is_host else "Chờ chủ phòng lắc" if all_chosen else "Chọn một linh vật" if not my_choice else "Chờ mọi người chọn"]
-			_action.text = "LẮC TÔ" if is_host and all_chosen else "CHỜ MỌI NGƯỜI CHỌN"
-			_action.disabled = not (is_host and all_chosen) or _animating
-		"revealed":
+		"betting":
+			if is_host:
+				_instruction.text = "Lượt %d/5 · Máy con đang đặt và xác nhận" % turn
+			else:
+				_instruction.text = "Lượt %d/5 · %s" % [turn, "Hết Lộc · Bạn đang xem với vai trò khán giả" if local_spectator else "Đã chốt cược · Chờ người còn lại" if local_ready else "Chọn chip, đặt lên linh vật rồi xác nhận"]
+			_action.text = "CHỜ MÁY CON XÁC NHẬN"
+			_action.disabled = true
+		"locked":
+			_instruction.text = "Lượt %d/5 · Tất cả người chơi đã xác nhận" % turn
+			_action.text = "LẮC TÔ" if is_host else "CHỜ CHỦ PHÒNG LẮC"
+			_action.disabled = not is_host or _animating
+		"settled":
 			var result_names: Array[String] = []
-			for symbol: String in room.state.get("last_results", []):
+			for symbol: String in room.state.get("results", []):
 				result_names.append(GameConstants.SYMBOL_LABELS[symbol])
 			_instruction.text = "Lượt %d/5 · Kết quả: %s" % [turn, " · ".join(result_names)]
-			_action.text = "ĐẬY TÔ · TIẾP TỤC" if turn < PartyMatch.TOTAL_TURNS else "XEM KẾT QUẢ"
+			_action.text = "ĐẬY TÔ · TIẾP TỤC" if turn < DealerPartyMatchScript.TOTAL_ROUNDS else "XEM BẢNG XẾP HẠNG"
 			_action.disabled = not is_host or _animating
 		"finished":
-			var best: int = scores.max()
-			var winners: Array[String] = []
-			for seat in scores.size():
-				if scores[seat] == best:
-					winners.append(room.players[seat])
-			_instruction.text = "Kết thúc! %s dẫn đầu với %d điểm." % [" và ".join(winners), best]
-			_action.text = "CHỦ PHÒNG CHƠI LẠI"
+			var board: Array = room.state.get("leaderboard", [])
+			_instruction.text = "Kết thúc! %s dẫn đầu với %s." % [board[0].get("name", "Người chơi"), GameConstants.format_signed_luck(int(board[0].get("total_net", 0)))] if not board.is_empty() else "Kết thúc ván."
+			_action.text = "CHƠI LẠI" if is_host else "CHỜ CHỦ PHÒNG CHƠI LẠI"
 			_action.disabled = not is_host or _animating
 	for symbol in GameConstants.SYMBOLS:
 		var owners: Array[String] = []
-		for seat in choices.size():
-			if choices[seat] == symbol:
-				owners.append(room.players[seat])
+		for player: Dictionary in match_players:
+			var amount := int(player.get("bets", {}).get(symbol, 0))
+			if amount > 0:
+				owners.append("%s %s" % [player.get("name", "Người chơi"), GameConstants.format_luck(amount)])
 		var card: MascotCard = _cards[symbol]
-		card.set_party_state(", ".join(owners) if not owners.is_empty() else "CHỌN MẶT", not owners.is_empty())
-		card.disabled = phase != "choose" or my_choice or _animating
+		card.set_party_state(" · ".join(owners) if not owners.is_empty() else "CHƯA CÓ CƯỢC", not owners.is_empty())
+		card.disabled = is_host or phase != "betting" or local_ready or local_spectator or _animating
 	if phase != _shown_phase:
 		_shown_phase = phase
-		if phase == "revealed":
+		if phase == "settled":
 			_play_reveal()
 		elif _bowl.is_revealed:
 			_play_cover()
@@ -310,7 +410,7 @@ func _play_reveal() -> void:
 	_animating = true
 	_refresh()
 	var results: Array[String] = []
-	for symbol: String in room.state.get("last_results", []):
+	for symbol: String in room.state.get("results", []):
 		results.append(symbol)
 	if results.size() == 3:
 		await _bowl.play_reveal(results)
@@ -325,18 +425,71 @@ func _play_cover() -> void:
 	_refresh()
 
 func _choose(symbol: String) -> void:
-	if room.choose(symbol):
+	if room.place_bet(symbol, _selected_chip):
 		GameSettings.tap_feedback()
 		AudioDirector.play(NativeAudioDirector.Cue.TAP)
+
+func _select_chip(value: int) -> void:
+	if not GameConstants.CHIP_VALUES.has(value):
+		return
+	_selected_chip = value
+	GameSettings.tap_feedback()
+	_refresh()
+
+func _clear_bets() -> void:
+	if room.clear_bets():
+		GameSettings.tap_feedback()
+
+func _confirm_bets() -> void:
+	if room.confirm_bets():
+		GameSettings.tap_feedback()
+
+func _watch_rewarded() -> void:
+	if room.mode != "guest" or room.local_player_id.is_empty() or not _pending_reward_id.is_empty():
+		return
+	_pending_reward_id = "%s:%s:%d" % [room.room_id, room.local_player_id, Time.get_ticks_msec()]
+	if not AdPlacement.show_rewarded(_pending_reward_id):
+		_pending_reward_id = ""
+		_status.text = "Video thưởng chưa sẵn sàng. Vui lòng thử lại sau."
+	_refresh()
+
+func _on_rewarded_earned(request_id: String) -> void:
+	if request_id != _pending_reward_id:
+		return
+	if room.request_reward(request_id):
+		_status.text = "Đã xem xong. Đang xác nhận Lộc với chủ phòng…"
+	else:
+		_pending_reward_id = ""
+		_status.text = "Không thể gửi phần thưởng đến chủ phòng."
+
+func _on_rewarded_failed(request_id: String, message: String) -> void:
+	if request_id != _pending_reward_id:
+		return
+	_pending_reward_id = ""
+	_status.text = message
+	_refresh()
+
+func _on_rewarded_availability_changed(_available: bool) -> void:
+	_refresh()
+
+func _on_banner_visibility_changed(visible: bool) -> void:
+	if not is_instance_valid(_content_margin):
+		return
+	# The native banner is drawn over the Godot surface. Reserve space only
+	# after it actually loads so a no-fill response never leaves a blank strip.
+	_content_margin.add_theme_constant_override("margin_bottom", 270 if visible else 120)
+
+func _format_chip(value: int) -> String:
+	return "%dK" % (value / 1000)
 
 func _on_bowl_tapped() -> void:
 	if _animating or room.mode != "host":
 		return
 	match room.state.get("phase", ""):
-		"choose":
+		"locked":
 			if not room.roll():
-				_status.text = "Chờ tất cả người chơi chọn linh vật."
-		"revealed":
+				_status.text = "Chờ tất cả máy con xác nhận cược."
+		"settled":
 			_animating = true
 			_refresh()
 			await _bowl.play_cover()

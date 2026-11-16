@@ -87,6 +87,12 @@ func _run() -> void:
 	_drain_host_messages()
 	assert(host.state.is_empty() and host.players.size() == 3)
 	assert(guests[0].state.is_empty())
+	assert(not guests[0].rooms.is_empty())
+	host.leave()
+	_drain_host_messages()
+	assert(guests[0].mode == "idle")
+	assert(guests[0].room_id.is_empty())
+	assert(guests[0].rooms.is_empty())
 	print("Nearby party 4-player flow passed")
 	quit(0)
 

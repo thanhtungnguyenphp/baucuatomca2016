@@ -22,3 +22,7 @@ See [feature charter](../../docs/nearby/FEATURE_CHARTER.md) and [architecture](.
 ## Android Wi-Fi permissions
 
 Keep `ACCESS_WIFI_STATE` and `CHANGE_WIFI_STATE` in the merged manifest on current Android versions. With `play-services-nearby:19.3.0`, an Android 15 device returned `ConnectionsStatusCodes.MISSING_PERMISSION_ACCESS_WIFI_STATE` (8032) when `ACCESS_WIFI_STATE` had `maxSdkVersion=32`; advertising worked after removing that cap. Both are normal permissions.
+
+## Android 13+ discovery fallback
+
+On a tested Android 15 phone, Play services returned `MISSING_PERMISSION_ACCESS_COARSE_LOCATION` (8034), then `MISSING_PERMISSION_ACCESS_FINE_LOCATION` (8036) for `startDiscovery` even with Nearby devices and Wi-Fi permissions granted. The core exposes each location permission as missing only after the corresponding SDK error; the game requests it and retries discovery once per error. Both permissions are declared in the addon manifest for this compatibility path. Advertising does not request either proactively. Review the merged manifest, runtime prompt, privacy policy and Data safety before publishing an app using this addon.

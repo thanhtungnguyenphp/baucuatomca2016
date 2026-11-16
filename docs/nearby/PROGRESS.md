@@ -2,8 +2,43 @@
 
 **Nhánh:** `codex/feature-nearby-connections`
 
-**Trạng thái (15/11/2026):** plugin Nearby đã được bật trong game trên nhánh tính năng. Đã có màn hình tạo/tìm phòng, xác thực mã, chơi 2–4 người với chủ phòng lắc tô, đồng bộ 5 lượt/điểm và chơi lại. APK debug đã xuất; bản Google Play hiện tại chưa có tính năng này. Còn cần kiểm thử phòng game trên nhiều điện thoại thật, reconnect và rà soát quyền riêng tư trước khi phát hành.
+**Trạng thái (16/11/2026):** bản game Nearby v1 đã qua năm lượt trên hai điện thoại thật. NBY-14–21 của v2 đã hoàn thành code/test headless: host chỉ điều khiển bàn, client đặt nhiều cửa, payout/leaderboard đồng bộ, Rewarded Ad có host xác thực và banner adaptive. NBY-22 đang QA; v2 chưa chơi đủ ván trên thiết bị thật, chưa thử 3–4 máy hoặc cập nhật Store.
 
+## Kế hoạch tối ưu v2 — 16/11/2026
+
+- NBY-14 hoàn thành: người dùng phê duyệt tiến hành tuần tự theo bộ mặc định trong kế hoạch v2.
+- NBY-15 hoàn thành: thêm model thuần `DealerPartyMatch` với tối đa ba client, balance/bets/confirm/spectator, host settlement qua `RoundResolver`, leaderboard và quy tắc hoàn stake khi client rời trước settle. Test mới và test hồi quy `PartyMatch`, Nearby v1, core rules đều qua. NBY-16 đang thực hiện.
+- NBY-16 hoàn thành: thêm `PartyNearbyAdapterV2` song song adapter v1, service/protocol v2, client action IDs, host validation, snapshot balance/bets/results/leaderboard và từ chối v1 rõ ràng. Test protocol qua action trùng, stale round, forged state và disconnect refund.
+- NBY-17 hoàn thành: màn hình Nearby dùng adapter v2; host có badge dealer, không có seat/đường đặt, thấy cược và ready của client, chỉ lắc khi phase `locked`. Test UI host headless đã qua. NBY-18 đang thực hiện.
+- NBY-18 hoàn thành: client có balance, sáu chip, đặt nhiều cửa, xóa/xác nhận và khóa UI sau confirm; hết Lộc hiển thị spectator và không chặn host. Test UI client, host và protocol v2 đều qua. NBY-19 đang thực hiện.
+- NBY-19 hoàn thành: kết quả, payout/net của từng client và leaderboard được lấy từ snapshot authoritative; test năm lượt xác nhận rank giống nhau, ad bonus không vào `total_net` và rematch reset dữ liệu phiên.
+- NBY-20 hoàn thành code/test: preload Rewarded, chỉ gửi claim sau callback earned, host chống request trùng và lifecycle quảng cáo toàn màn hình không đóng phòng. Development dùng test ID; cần Rewarded production ID trước release. NBY-21 đang thực hiện.
+- NBY-21 hoàn thành code/test: banner dùng anchored adaptive size, Main/Nearby chỉ dành vùng dưới khi native banner báo loaded và trả lại không gian khi no-fill. Test layout qua ở 720×1650 và 1080×2400; bổ sung trạng thái chẩn đoán consent/load. AdMob vẫn cần publisher sửa UMP Privacy & messaging để trạng thái consent không còn `UNKNOWN`. NBY-22 đang thực hiện.
+- Đã chốt hướng kiến trúc trong tài liệu: tổng tối đa bốn thiết bị gồm một dealer host và một đến ba client. Host không đặt cược, không có balance và không xuất hiện trên leaderboard.
+- Đã bổ sung backlog NBY-14–23 cho model balance/bets, protocol v2, UI host/client, payout/leaderboard, Rewarded Ad, banner/UMP, QA bốn máy và release readiness.
+- Adapter/model v1 vẫn được giữ song song để hồi quy; màn hình Nearby hiện dùng protocol/model v2.
+- AdMob App ID, banner và interstitial production ID đã nằm trong code. Chưa có Rewarded production ID. Log máy thật trước đây báo UMP publisher misconfiguration/no form và ads chờ consent status 0; lỗi cấu hình publisher này vẫn cần sửa trong AdMob Privacy & messaging.
+
+## NBY-22 QA v2 đang thực hiện — 16/11/2026
+
+- Toàn bộ regression tự động qua: core rules, engagement, local `PartyMatch`/PartyFlow, Nearby v1, `DealerPartyMatch`, protocol v2, UI host/client, payout/leaderboard/rematch, portrait layout và banner layout 720×1650/1080×2400.
+- Export APK debug v2 thành công tại `export/android/bau-cua-tom-ca-debug.apk`, dung lượng khoảng 210 MB, SHA-256 `b25b013084e96f671be2200efce365acefb3789e178e945cf48a27abd093c605`.
+- Cài đè package `vn.lamgame.baucuatomca.dev` thành công trên Android 15 `23021RAAEG`. Không có crash/ANR hoặc lỗi script lúc khởi động; lần chụp UI bị chặn vì thiết bị đang ở AOD/keyguard và app nhận `OnPause/OnStop` ngay sau launch.
+- ADB chỉ nhận một điện thoại tại thời điểm kiểm tra. Chưa thể chạy host–client hai chiều, đủ năm lượt/rematch, disconnect/background rewarded hoặc cổng một host + ba client. NBY-22 giữ trạng thái đang thực hiện.
+
+
+## Kiểm thử game trên hai điện thoại thật — 15/11/2026
+
+| Thiết bị | Android | Vai | Package |
+| --- | --- | --- | --- |
+| Redmi 23021RAAEG | 15 / API 35 | Chủ phòng, lắc tô | `vn.lamgame.baucuatomca.dev` |
+| Redmi 220333QPG | 11 / API 30 | Khách, chọn linh vật | `vn.lamgame.baucuatomca.dev` |
+
+- Cài cùng APK debug 1.2.0/code 5 qua ADB trên cả hai máy: `Success`. Tạo phòng, tìm phòng và cùng xác nhận mã Nearby trùng nhau; hai máy hiển thị cùng phòng 098415 và 2/4 người.
+- Chơi đủ năm lượt trên hai máy. Chủ phòng chọn Bầu, khách chọn Cua; chỉ chủ phòng lắc/đậy tô. Mỗi kết quả ba mặt và bảng điểm đều trùng nhau. Ví dụ lượt 1 là Cua · Cá · Cua, điểm 0–2; hết lượt 5 điểm 1–2 trên cả hai máy. Chạm chơi lại: cả hai về lượt 1/5, điểm 0–0.
+- Khách rời khi ván chơi lại đã bắt đầu: chủ phòng quay về lobby 1/4, dừng ván và hiển thị lý do, không treo UI.
+- Đã sửa và cài lại hai máy: thông báo xin quyền biến mất khi quyền đã cấp; trạng thái chơi cũng cập nhật sau khi chủ phòng xác nhận lựa chọn. Thử thêm chủ phòng rời: khách thấy thông báo đóng phòng. Phát hiện danh sách khách còn nút phòng cũ sau khi host rời; đã sửa để xóa phòng cũ và bổ sung test hồi quy, chờ cài lại xác minh bản sửa này.
+- Đảo vai Android 11 host / Android 15 guest phát hiện lần lượt SDK 8034 và 8036. Fallback xin coarse rồi fine location theo đúng mã lỗi đã được build/cài. Android 15 sau đó tìm thấy phòng Android 11, hai máy cùng hiện mã 1589, chấp nhận và cùng vào phòng 765925 với 2/4 người. Chưa chơi lại đủ năm lượt theo chiều này; chưa thử từ chối quyền, chuyển nền, tắt radio/quyền trong trận, 3–4 máy hoặc reconnect. Không dùng kết quả hai máy để kết luận ổn định bốn máy.
 
 ## Tích hợp game — 15/11/2026
 
@@ -11,7 +46,7 @@
 - Tạo/tìm phòng `P2P_STAR`, host giữ tối đa ba guest. Hai phía đối chiếu mã xác thực Nearby trước khi chấp nhận. Host cũng là người chơi ghế 0 và là người duy nhất lắc, tạo ba kết quả, cộng điểm và phát snapshot. Khách chỉ gửi lựa chọn; host kiểm tra ghế, lượt, biểu tượng và trạng thái.
 - Nếu guest rời khi đang chơi, host dừng ván và đưa những người còn lại về lobby. Nếu mất host, guest kết thúc phòng rõ ràng. Reconnect giữ ghế/chơi tiếp **chưa triển khai**. Phòng tự đóng khi ứng dụng chuyển nền; bỏ qua tạm dừng do hộp xin quyền.
 - Test giả lập transport đã qua luồng 4 người × 5 lượt, đồng bộ điểm, rematch, chặn lựa chọn sai lượt/người lạ, và dừng ván khi mất guest. Test `PartyMatch` và core rules cũ cũng qua. Godot headless tải scene mới không lỗi.
-- APK debug package `vn.lamgame.baucuatomca.dev` xuất thành công; manifest có `BLUETOOTH_ADVERTISE`, `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`, `NEARBY_WIFI_DEVICES` và quyền Wi-Fi/vị trí theo phiên bản Android. Điện thoại ADB hiện chỉ có một máy; lần cài thử đầu tiên bị hệ thống báo `INSTALL_FAILED_USER_RESTRICTED`, đang chờ người dùng cho phép cài qua USB. Chưa có bằng chứng trận chơi Nearby trên thiết bị thật cho bản game này.
+- APK debug package `vn.lamgame.baucuatomca.dev` xuất thành công; manifest có `BLUETOOTH_ADVERTISE`, `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`, `NEARBY_WIFI_DEVICES` và quyền Wi-Fi/vị trí theo phiên bản Android. Lần cài thử đầu tiên trước đó bị `INSTALL_FAILED_USER_RESTRICTED`; sau khi kết nối lại hai máy, APK đã cài thành công và qua ván chơi thật nêu trên.
 - Chưa tăng version code, chưa tạo AAB phát hành, chưa cập nhật chính sách quyền riêng tư/Data safety trên Store. Các bước này thuộc NBY-12/13 sau QA thiết bị.
 
 ## Kiểm tra lịch sử — 11/11/2026
@@ -51,8 +86,8 @@
 
 ## Chưa xác minh / việc tiếp theo
 
-1. **NBY-03/04:** từ chối quyền Nearby tại hộp hệ thống, tắt Bluetooth/Wi-Fi trong phiên, và thử đảo vai Android 11 host / Android 15 guest. Dùng [bảng kiểm thiết bị thật](NBY-04_DEVICE_RUNBOOK.md) và `plugins/nearby-connections/device-report.sh` để ghi nhận có thể lặp lại; kiểm tra ngày 11/11 ADB chỉ thấy một máy Android 15.
-2. **NBY-05:** cần thêm hai Android thật để thử một host và ba guest với `P2P_STAR`, đo thời gian vào phòng và độ ổn định. Chưa thể quyết định Go/No-Go cho chế độ 2–4 người.
-3. Sau cổng Go/No-Go: hoàn thiện lifecycle/timeout/retry, tích hợp game protocol và UI phòng, rồi QA quyền riêng tư/Data safety trước khi cân nhắc phát hành.
+1. **NBY-22 hai máy:** mở khóa Android 15 và kết nối lại Android 11; chơi đủ năm lượt theo cả hai chiều host/client, rematch, rời phòng và rewarded lifecycle.
+2. **NBY-05/NBY-22 bốn máy:** cần thêm hai Android thật để thử một host và ba client với `P2P_STAR`; chưa thể quyết định Go/No-Go bốn thiết bị.
+3. **NBY-23:** chỉ bắt đầu sau cổng QA; cần Rewarded production Ad Unit ID và sửa/publish UMP message trong AdMob Privacy & messaging trước release.
 
 **Không thực hiện ở giai đoạn này:** build AAB phát hành, tăng version code hoặc gửi bản lên Store.

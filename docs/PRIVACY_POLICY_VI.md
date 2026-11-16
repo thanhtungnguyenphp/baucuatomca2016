@@ -9,9 +9,13 @@
 
 Ứng dụng không yêu cầu tài khoản. Số Lộc ảo, lịch sử ván gần đây, tiến trình Hành trình (thử thách theo ngày, bộ sưu tập, giao diện đã chọn), cùng tùy chọn âm thanh và rung được lưu trên thiết bị. Chế độ Chơi cùng bạn chỉ dùng dữ liệu trong phiên chơi. Nhà phát hành không vận hành máy chủ để nhận hoặc đồng bộ những dữ liệu trò chơi này.
 
+## Chơi gần nhau
+
+Chế độ **Chơi gần nhau** dùng Google Nearby Connections để tìm và kết nối các điện thoại đặt gần nhau. Khi người chơi mở chế độ này, ứng dụng xin quyền thiết bị ở gần/Bluetooth và Wi-Fi cần thiết. Trên một số thiết bị, nếu Google Play services yêu cầu thêm khi tìm phòng, ứng dụng sẽ lần lượt xin quyền **vị trí gần đúng** hoặc **vị trí chính xác** theo mã lỗi SDK và giải thích ngay trong màn hình. Quyền này chỉ dùng để Google Nearby tìm thiết bị trong phiên chơi; game không đọc tọa độ GPS, không lưu vị trí của người chơi và không vận hành máy chủ nhận dữ liệu ván chơi. Tên hiển thị, lựa chọn, kết quả và điểm số được trao đổi trực tiếp giữa các điện thoại trong phòng. Google Nearby SDK có thể xử lý thông tin thiết bị và chỉ số sử dụng để vận hành/cải thiện dịch vụ theo chính sách của Google.
+
 ## Quảng cáo và dữ liệu do Google xử lý
 
-Ứng dụng tích hợp Google AdMob để hiển thị banner và quảng cáo toàn màn hình giữa một số ván. Theo tài liệu của Google, Google Mobile Ads SDK có thể tự động thu thập và chia sẻ địa chỉ IP, tương tác với ứng dụng và quảng cáo, thông tin chẩn đoán, cùng mã định danh thiết bị hoặc tài khoản (bao gồm mã quảng cáo khi có thể sử dụng) cho mục đích quảng cáo, đo lường và ngăn gian lận. Địa chỉ IP có thể được dùng để ước lượng vị trí chung; ứng dụng không yêu cầu quyền vị trí chính xác.
+Ứng dụng tích hợp Google AdMob để hiển thị banner và quảng cáo toàn màn hình giữa một số ván. Theo tài liệu của Google, Google Mobile Ads SDK có thể tự động thu thập và chia sẻ địa chỉ IP, tương tác với ứng dụng và quảng cáo, thông tin chẩn đoán, cùng mã định danh thiết bị hoặc tài khoản (bao gồm mã quảng cáo khi có thể sử dụng) cho mục đích quảng cáo, đo lường và ngăn gian lận. Địa chỉ IP có thể được dùng để ước lượng vị trí chung. Quyền vị trí chính xác, nếu Google Nearby yêu cầu, chỉ thuộc chức năng tìm phòng ở gần nêu trên.
 
 Ứng dụng dùng Google User Messaging Platform để hỏi hoặc quản lý lựa chọn quyền riêng tư khi cần theo khu vực. Khi biểu mẫu yêu cầu, người chơi có thể mở lại lựa chọn tại **Tùy chỉnh → Quyền riêng tư**. Việc hiển thị quảng cáo có thể cần kết nối mạng; phần chơi chính có thể hoạt động khi không có mạng.
 

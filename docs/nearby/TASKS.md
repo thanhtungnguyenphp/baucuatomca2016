@@ -1,6 +1,6 @@
 # Backlog triển khai Nearby Connections
 
-**Trạng thái (15/11/2026):** NBY-09/10 đã có code game, test mô phỏng 4 người và APK debug; chưa qua kiểm thử phòng game trên hai điện thoại thật. NBY-11 mới có dừng ván khi mất kết nối và chơi lại, chưa có reconnect. Xem [tiến độ và bằng chứng kiểm thử](PROGRESS.md).
+**Trạng thái (16/11/2026):** NBY-14–21 đã hoàn thành code/test headless cho game v2: dealer host, cược client, payout/leaderboard, Rewarded Ad có xác thực ở host và banner adaptive. NBY-22 đang QA thiết bị; cấu hình UMP publisher và Rewarded production ID vẫn là điều kiện trước release. Xem [kế hoạch v2](MULTIPLAYER_V2_PLAN.md) và [tiến độ](PROGRESS.md).
 **Ưu tiên:** P0 = chứng minh khả thi và khóa ranh giới plugin; P1 = hoàn thiện tính năng; P2 = kiểm thử và phát hành.
 **Ước lượng:** ngày công kỹ thuật, chưa tính thời gian chờ thiết bị hoặc duyệt Store.
 
@@ -19,14 +19,28 @@
 | 11 | NBY-11 | P1 | Một phần | Xử lý rời phòng, mất kết nối, guest nối lại/snapshot, chơi lại; điều chỉnh vị trí quảng cáo. | 10 | 3–5 ngày | Không treo trận; mọi máy đồng bộ hoặc thoát phòng rõ ràng sau lỗi. |
 | 12 | NBY-12 | P2 | Chờ NBY-11 | Ma trận QA thiết bị thật, hiệu năng và hồi quy UI/UX, kiểm tra AAB/manifest. | 11 | 3–5 ngày | 2/3/4 máy chơi trọn năm lượt và rematch; các tình huống mất quyền/radio/mạng có kết quả mong đợi. |
 | 13 | NBY-13 | P2 | Chờ NBY-12 | Cập nhật Privacy Policy/Data safety, mô tả quyền, release note, internal testing và quyết định phát hành. | 12 | 1–2 ngày | Nội dung Store khớp SDK/manifest thực tế; internal test qua trước khi phát hành. |
+| 14 | NBY-14 | P0 | Hoàn thành 16/11/2026 | Khóa mô hình một dealer host + 1–3 client, balance đầu phòng, chip, luật nhiều cửa, rewarded amount và xử lý client rời. | — | 0,5 ngày | Các giá trị ở mục 9 của kế hoạch v2 được duyệt; không còn quyết định luật mở trước khi sửa model. |
+| 15 | NBY-15 | P0 | Hoàn thành 16/11/2026 | Tạo model thuần v2 cho client-only seats, bets, balance, ready/spectator, settlement và leaderboard; giữ `RoundResolver` là nguồn payout. | 14 | 1–1,5 ngày | Test host không có seat; nhiều cửa, insufficient balance, settle idempotent và tie-break leaderboard đều qua. |
+| 16 | NBY-16 | P0 | Hoàn thành 16/11/2026 | Nâng game protocol v2 và `PartyNearbyAdapter`: action id, confirm bets, snapshot balance/payout/rank, chặn client tự khai balance/result. | 15 | 1–1,5 ngày | Message cũ/trùng/sai lượt bị bỏ; v1/v2 không ghép nhầm; mọi client nhận cùng snapshot. |
+| 17 | NBY-17 | P1 | Hoàn thành 16/11/2026 | UX host/dealer: badge vai trò, khóa cược, hiển thị cược client trên bàn, ready list và quyền lắc/mở/đậy. | 16 | 0,75–1 ngày | Host không có đường đặt cược; nút lắc chỉ bật khi các client hoạt động đã confirm. |
+| 18 | NBY-18 | P1 | Hoàn thành 16/11/2026 | UX client: chip, đặt nhiều cửa, xóa/xác nhận, khóa sau confirm, balance và trạng thái spectator khi hết Lộc. | 16 | 1–1,5 ngày | Client hiểu được trạng thái và hoàn thành một lượt không cần hướng dẫn ngoài app. |
+| 19 | NBY-19 | P1 | Hoàn thành 16/11/2026 | Đồng bộ trình diễn kết quả, payout từng client và leaderboard lượt/cuối ván trên mọi máy. | 17, 18 | 0,75–1 ngày | Result/payout/rank giống nhau; ad bonus không cộng `total_net`; rematch reset đúng dữ liệu phiên. |
+| 20 | NBY-20 | P1 | Hoàn thành code/test 16/11/2026; chờ production ID | Tích hợp Rewarded Ad cho client hết Lộc, chống claim trùng, preload và lifecycle guard để xem ad không đóng phòng. | 16, 18 | 1–1,5 ngày | Chỉ callback earned reward cấp Lộc; cancel/fail/offline không cấp; host không bị chặn bởi spectator. |
+| 21 | NBY-21 | P1 | Hoàn thành code/test 16/11/2026; chờ sửa UMP publisher | Sửa UMP/consent, dùng anchored adaptive banner, dành safe area dưới button ở Main/Nearby và thêm chẩn đoán load/no-fill. | — | 0,5–1 ngày | Test banner hiện trên 720×1650 và 1080×2400, không che UI; load fail không để khoảng trắng. |
+| 22 | NBY-22 | P2 | Đang thực hiện; automation + cài 1 máy đạt, chờ 2/4 máy | QA v2 hai chiều trên Android 11/15, sau đó một host + ba client; disconnect, background ad, radio, quyền, duplicate message và năm lượt/rematch. | 19, 20, 21 | 1–2 ngày | Ma trận test có bằng chứng; không lệch balance/result/rank và không treo phòng. |
+| 23 | NBY-23 | P2 | Chưa bắt đầu | Cập nhật Privacy Policy/Data safety/Store content, release note, version/build và internal test sau khi NBY-22 đạt. | 22 | 0,5–1 ngày | AAB release khớp quyền, ad units, consent và tính năng thực tế; có quyết định Go/No-Go. |
 
 **Tổng sơ bộ:** khoảng 29–47 ngày công, có thể làm song song NBY-08 với NBY-06/07 sau khi NBY-01 được duyệt. Đây là ước lượng lập kế hoạch, không phải cam kết lịch. Rủi ro lớn nhất là độ ổn định `P2P_STAR` trên bốn máy và quyền trên các phiên bản Android; NBY-04/05 kiểm chứng trước khi đầu tư UI/game.
+
+**Phần tối ưu v2 NBY-14–23:** khoảng 7–11 ngày công sau khi duyệt luật. Rewarded production ID chỉ bắt buộc trước NBY-23; trong development dùng test unit ID.
 
 ## Cổng duyệt
 
 1. **Duyệt thiết kế trước NBY-02:** xác nhận Nearby Connections, phụ thuộc Google Play services, mô hình hai gói và luật phòng.
 2. **Go/No-Go sau NBY-05:** nếu bốn máy không ổn định, giới hạn bản đầu ở hai máy hoặc đánh giá transport khác; ghi lại dữ liệu thử nghiệm rồi quyết định.
 3. **Duyệt phát hành sau NBY-13:** xác nhận bản AAB, quyền, Data safety và trải nghiệm trên máy thật.
+4. **Duyệt luật v2 trước NBY-15:** xác nhận balance đầu phòng, chip, rewarded amount, nhiều cửa và chính sách client rời.
+5. **Go/No-Go v2 sau NBY-22:** chỉ chuẩn bị Store khi một host + ba client qua năm lượt, rewarded lifecycle và banner layout.
 
 ## Ngoài phạm vi bản đầu
 
