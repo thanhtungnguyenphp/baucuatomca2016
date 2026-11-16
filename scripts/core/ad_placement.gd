@@ -3,7 +3,7 @@ extends Node
 const ADMOB_APP_ID := "ca-app-pub-6352554924566967~6336109870"
 const BANNER_UNIT_ID := "ca-app-pub-6352554924566967/5111492266"
 const INTERSTITIAL_UNIT_ID := "ca-app-pub-6352554924566967/4875241431"
-const REWARDED_UNIT_ID := "" # Publisher supplies this before release.
+const REWARDED_UNIT_ID := "ca-app-pub-6352554924566967/7706970639"
 const TEST_BANNER_UNIT_ID := "ca-app-pub-3940256099942544/6300978111"
 const TEST_INTERSTITIAL_UNIT_ID := "ca-app-pub-3940256099942544/1033173712"
 const TEST_REWARDED_UNIT_ID := "ca-app-pub-3940256099942544/5224354917"
@@ -192,8 +192,12 @@ func show_privacy_options() -> void:
 func is_configured() -> bool:
 	return ADMOB_APP_ID.begins_with("ca-app-pub-") \
 		and "~" in ADMOB_APP_ID \
+		and BANNER_UNIT_ID.begins_with("ca-app-pub-") \
+		and "/" in BANNER_UNIT_ID \
 		and INTERSTITIAL_UNIT_ID.begins_with("ca-app-pub-") \
-		and "/" in INTERSTITIAL_UNIT_ID
+		and "/" in INTERSTITIAL_UNIT_ID \
+		and REWARDED_UNIT_ID.begins_with("ca-app-pub-") \
+		and "/" in REWARDED_UNIT_ID
 
 func is_banner_visible() -> bool:
 	return _banner_visible
