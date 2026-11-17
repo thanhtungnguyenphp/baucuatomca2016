@@ -1,6 +1,6 @@
 # Backlog triển khai Nearby Connections
 
-**Trạng thái (17/11/2026):** NBY-14–21 đã hoàn thành: dealer host, cược client, payout/leaderboard, Rewarded Ad có xác thực ở host, UMP và banner adaptive. Banner/Interstitial/Rewarded đã load thành công trên Android 11 sau khi sửa thứ tự khởi tạo Mobile Ads. NBY-22 đang QA multiplayer thiết bị thật. Xem [kế hoạch v2](MULTIPLAYER_V2_PLAN.md) và [tiến độ](PROGRESS.md).
+**Trạng thái (17/11/2026):** NBY-14–21 đã hoàn thành: dealer host, cược client, payout/leaderboard, Rewarded Ad có xác thực ở host, UMP và banner adaptive. Banner/Interstitial/Rewarded đã load thành công trên Android 11 sau khi sửa thứ tự khởi tạo Mobile Ads. NBY-22 vẫn đang QA multiplayer thiết bị thật; NBY-23 đã tạo release candidate 1.3.0/code 6 để đưa lên Internal testing nhưng chưa đạt cổng Go/No-Go bốn thiết bị. Xem [kế hoạch v2](MULTIPLAYER_V2_PLAN.md) và [tiến độ](PROGRESS.md).
 **Ưu tiên:** P0 = chứng minh khả thi và khóa ranh giới plugin; P1 = hoàn thiện tính năng; P2 = kiểm thử và phát hành.
 **Ước lượng:** ngày công kỹ thuật, chưa tính thời gian chờ thiết bị hoặc duyệt Store.
 
@@ -28,7 +28,7 @@
 | 20 | NBY-20 | P1 | Hoàn thành 16/11/2026 | Tích hợp Rewarded Ad cho client hết Lộc, chống claim trùng, preload và lifecycle guard để xem ad không đóng phòng. | 16, 18 | 1–1,5 ngày | Chỉ callback earned reward cấp Lộc; cancel/fail/offline không cấp; host không bị chặn bởi spectator. |
 | 21 | NBY-21 | P1 | Hoàn thành và xác minh máy thật 17/11/2026 | Sửa UMP/consent, dùng anchored adaptive banner, dành safe area dưới button ở Main/Nearby và thêm chẩn đoán load/no-fill. | — | 0,5–1 ngày | Test banner hiện trên 720×1650 và 1080×2400, không che UI; load fail không để khoảng trắng. |
 | 22 | NBY-22 | P2 | Đang thực hiện; automation + cài 2 máy đạt, chờ play test/4 máy | QA v2 hai chiều trên Android 11/15, sau đó một host + ba client; disconnect, background ad, radio, quyền, duplicate message và năm lượt/rematch. | 19, 20, 21 | 1–2 ngày | Ma trận test có bằng chứng; không lệch balance/result/rank và không treo phòng. |
-| 23 | NBY-23 | P2 | Chưa bắt đầu | Cập nhật Privacy Policy/Data safety/Store content, release note, version/build và internal test sau khi NBY-22 đạt. | 22 | 0,5–1 ngày | AAB release khớp quyền, ad units, consent và tính năng thực tế; có quyết định Go/No-Go. |
+| 23 | NBY-23 | P2 | Đang thực hiện; AAB 1.3.0/code 6 đã ký và validate, chờ upload/Internal testing | Cập nhật Privacy Policy/Data safety/Store content, release note, version/build và internal test. Không quảng bá rộng trước khi NBY-22 đạt. | 22 | 0,5–1 ngày | AAB release khớp quyền, ad units, consent và tính năng thực tế; có quyết định Go/No-Go. |
 
 **Tổng sơ bộ:** khoảng 29–47 ngày công, có thể làm song song NBY-08 với NBY-06/07 sau khi NBY-01 được duyệt. Đây là ước lượng lập kế hoạch, không phải cam kết lịch. Rủi ro lớn nhất là độ ổn định `P2P_STAR` trên bốn máy và quyền trên các phiên bản Android; NBY-04/05 kiểm chứng trước khi đầu tư UI/game.
 

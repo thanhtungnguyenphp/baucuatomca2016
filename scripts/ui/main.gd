@@ -446,16 +446,23 @@ func _configure_bottom_sheets() -> void:
 	_style_sheet_button(onboarding_start_button)
 
 func _show_bottom_sheet(popup: PopupPanel, desired_size: Vector2i, bottom_gap: int = 36) -> void:
-	var viewport_size := Vector2i(get_viewport().get_visible_rect().size)
-	var width := mini(desired_size.x, viewport_size.x - 48)
-	var height := mini(desired_size.y, viewport_size.y - 72)
-	var position := Vector2i((viewport_size.x - width) / 2, viewport_size.y - height - bottom_gap)
+	var geometry := _bottom_sheet_geometry(desired_size, bottom_gap, AdPlacement.is_banner_visible())
+	var size := geometry.size
+	var position := geometry.position
 	# PopupPanel may restore its authored offsets on popup(). Apply the final
 	# geometry after it becomes visible so every sheet keeps the mobile width.
 	popup.popup()
-	popup.size = Vector2i(width, height)
+	popup.size = size
 	popup.position = position
-	call_deferred("_lock_bottom_sheet_geometry", popup, Vector2i(width, height), position)
+	call_deferred("_lock_bottom_sheet_geometry", popup, size, position)
+
+func _bottom_sheet_geometry(desired_size: Vector2i, bottom_gap: int, banner_visible: bool) -> Rect2i:
+	var viewport_size := Vector2i(get_viewport().get_visible_rect().size)
+	var safe_bottom_gap := bottom_gap + (190 if banner_visible else 0)
+	var width := mini(desired_size.x, viewport_size.x - 48)
+	var height := maxi(1, mini(desired_size.y, viewport_size.y - safe_bottom_gap - 36))
+	var position := Vector2i((viewport_size.x - width) / 2, viewport_size.y - height - safe_bottom_gap)
+	return Rect2i(position, Vector2i(width, height))
 
 func _lock_bottom_sheet_geometry(popup: PopupPanel, size: Vector2i, position: Vector2i) -> void:
 	if popup.visible:

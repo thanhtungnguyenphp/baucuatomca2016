@@ -2,7 +2,7 @@
 
 **Nhánh:** `codex/feature-nearby-connections`
 
-**Trạng thái (16/11/2026):** bản game Nearby v1 đã qua năm lượt trên hai điện thoại thật. NBY-14–21 của v2 đã hoàn thành code/test headless: host chỉ điều khiển bàn, client đặt nhiều cửa, payout/leaderboard đồng bộ, Rewarded Ad có host xác thực và banner adaptive. NBY-22 đang QA; v2 chưa chơi đủ ván trên thiết bị thật, chưa thử 3–4 máy hoặc cập nhật Store.
+**Trạng thái (17/11/2026):** bản game Nearby v1 đã qua năm lượt trên hai điện thoại thật. NBY-14–21 của v2 đã hoàn thành code/test headless: host chỉ điều khiển bàn, client đặt nhiều cửa, payout/leaderboard đồng bộ, Rewarded Ad có host xác thực và banner adaptive. Release candidate 1.3.0/code 6 đã build và validate để đưa lên Internal testing. NBY-22 vẫn chưa chơi đủ ván v2 trên hai máy và chưa thử 3–4 máy, nên chưa có quyết định Go/No-Go phát hành rộng.
 
 ## Kế hoạch tối ưu v2 — 16/11/2026
 
@@ -26,6 +26,15 @@
 - Cài đè package `vn.lamgame.baucuatomca.dev` thành công trên điện thoại Redmi Android 15/API 35 `23021RAAEG` và máy tính bảng Samsung Android 16/API 36 `SM-X110`. Cả hai cùng chạy version `1.2.0`/code `5`, vào foreground, không có crash hoặc ANR lúc khởi động.
 - Lỗi UMP publisher misconfiguration trước đó đã được xử lý ngày 17/11/2026. Lần xác minh mới phát hiện và sửa crash thứ tự SDK initialization; sau khi cài lại, tiến trình sống ổn định và cả ba định dạng quảng cáo debug đều load.
 - Chưa chạy host–client đủ năm lượt/rematch, disconnect/background rewarded hoặc cổng một host + ba client. NBY-22 giữ trạng thái đang thực hiện.
+
+## NBY-23 release candidate — 17/11/2026
+
+- Tăng Android version lên `1.3.0`/code `6` cho cả debug và release; release giữ package `vn.lamgame.baucuatomca`.
+- Chạy lại 12/12 bộ test tự động: core, engagement, local party, Nearby v1/v2, dealer model, UI host/client, leaderboard, portrait và quảng cáo đều đạt.
+- Smoke test một máy Android 11 đạt: đặt Lộc, lắc/mở tô, tính balance/lượt và banner hoạt động. Luật chơi, Nhật ký và Tùy chỉnh đã kiểm tra; sửa bottom sheet để nút cuối không bị banner che.
+- Xuất AAB release đã ký tại `export/android/bau-cua-tom-ca-v1.3.0-code6.aab`, dung lượng khoảng 82 MB, SHA-256 `dc985ffd857c1d38e9631eb349b8204a5b9c440aaeb2a2203edfa121b122fb60`.
+- `bundletool 1.18.3 validate` đạt. Manifest xác nhận min SDK 24, target SDK 36, App ID AdMob production và các quyền Nearby. SHA-256 certificate trùng AAB 1.2.0/code 5.
+- Release notes 1.3.0 đã tạo. Bản này chỉ nên đưa lên Internal testing cho tới khi NBY-22 hoàn tất kiểm thử hai/bốn thiết bị.
 
 
 ## Kiểm thử game trên hai điện thoại thật — 15/11/2026
@@ -89,6 +98,6 @@
 
 1. **NBY-22 hai máy:** mở khóa Android 15 và kết nối lại Android 11; chơi đủ năm lượt theo cả hai chiều host/client, rematch, rời phòng và rewarded lifecycle.
 2. **NBY-05/NBY-22 bốn máy:** cần thêm hai Android thật để thử một host và ba client với `P2P_STAR`; chưa thể quyết định Go/No-Go bốn thiết bị.
-3. **NBY-23:** chỉ bắt đầu sau cổng QA; Rewarded production ID và UMP message đã sẵn sàng, còn cập nhật Store/Data safety/version/build sau khi multiplayer đạt.
+3. **NBY-23:** upload AAB 1.3.0/code 6 lên Internal testing, kiểm tra báo cáo pre-launch và rà lại Data safety/Advertising ID/Nearby permissions theo artifact cuối.
 
-**Không thực hiện ở giai đoạn này:** build AAB phát hành, tăng version code hoặc gửi bản lên Store.
+**Giới hạn phát hành hiện tại:** đã có AAB release candidate theo yêu cầu, nhưng chưa gửi Production rollout trước khi QA v2 hai/bốn máy và rewarded lifecycle đạt.

@@ -17,6 +17,9 @@ func _run() -> void:
 		main._position_bottom_actions(true)
 		assert(actions.offset_top < without_banner_top)
 		assert(actions.offset_bottom <= -300.0)
+		var geometry: Rect2i = main._bottom_sheet_geometry(Vector2i(960, 980), 36, true)
+		var logical_height := int(main.get_viewport().get_visible_rect().size.y)
+		assert(geometry.end.y <= logical_height - 226)
 		main.queue_free()
 		await process_frame
 
