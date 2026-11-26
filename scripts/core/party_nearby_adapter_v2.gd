@@ -1,22 +1,24 @@
 class_name PartyNearbyAdapterV2
 extends Node
 
-## Dealer/client game protocol v2. The reusable Nearby addon remains transport-only.
+## Dealer/client game protocol v4. The reusable Nearby addon remains transport-only.
 signal changed
 signal rooms_changed
 signal verification_needed(endpoint_id: String, name: String, digits: String)
 signal notice(message: String)
 
 const DealerPartyMatchScript := preload("res://scripts/core/dealer_party_match.gd")
-const SERVICE_ID := "vn.lamgame.baucuatomca.party.v2"
-const PROTOCOL_VERSION := 2
+const SERVICE_ID := "vn.lamgame.baucuatomca.party.v4"
+const PROTOCOL_VERSION := 4
 const MAX_MESSAGE_BYTES := 16 * 1024
-const MAX_CLIENTS := 3
+const MAX_CLIENTS := 5
+const BETTING_DURATION_SECONDS := 30
 
 var nearby := NearbyService.new()
 var mode := "idle" # idle, host, guest
 var room_id := ""
 var local_name := ""
+var host_name := ""
 var host_endpoint := ""
 var local_seat := -1 # Host has no seat; client seats start at 1.
 var local_player_id := ""
@@ -32,6 +34,9 @@ var _processed_actions: Dictionary = {}
 var _seq := 0
 var _action_seq := 0
 var _pending_action := ""
+var _betting_deadline_msec := 0
+var _last_published_betting_second := -1
+var _betting_timer: Timer
 var _discovery_coarse_retry_attempted := false
 var _discovery_fine_retry_attempted := false
 var _rng := RandomNumberGenerator.new()
@@ -46,6 +51,11 @@ func _ready() -> void:
 	nearby.payload_received.connect(_on_payload)
 	nearby.permission_result.connect(_on_permission_result)
 	nearby.error.connect(_on_nearby_error)
+	_betting_timer = Timer.new()
+	_betting_timer.wait_time = 0.2
+	_betting_timer.autostart = true
+	_betting_timer.timeout.connect(_tick_betting_countdown)
+	add_child(_betting_timer)
 
 func _exit_tree() -> void:
 	nearby.stop_all()
@@ -63,6 +73,7 @@ func create_room(name: String) -> void:
 	leave()
 	mode = "host"
 	local_name = _clean_name(name)
+	host_name = local_name
 	room_id = "%06d" % _rng.randi_range(0, 999999)
 	changed.emit()
 	notice.emit("Đã tạo phòng. Máy này là chủ phòng và chỉ điều khiển tô.")
@@ -75,6 +86,7 @@ func find_rooms(name: String) -> void:
 	leave()
 	mode = "guest"
 	local_name = _clean_name(name)
+	host_name = ""
 	rooms.clear()
 	rooms_changed.emit()
 	changed.emit()
@@ -85,6 +97,7 @@ func join_room(endpoint_id: String) -> void:
 	if mode != "guest" or not rooms.has(endpoint_id) or not host_endpoint.is_empty():
 		return
 	host_endpoint = endpoint_id
+	host_name = _clean_name(str(rooms[endpoint_id]))
 	nearby.request_connection(endpoint_id, local_name)
 	changed.emit()
 
@@ -101,11 +114,12 @@ func start_match() -> bool:
 	if mode != "host" or _match.players.is_empty() or not _match.start_match():
 		return false
 	_processed_actions.clear()
+	_begin_betting_countdown()
 	_publish_state()
 	return true
 
 func place_bet(symbol: String, amount: int) -> bool:
-	if mode != "guest" or state.get("phase", "") != DealerPartyMatchScript.PHASE_BETTING:
+	if mode != "guest" or state.get("phase", "") != DealerPartyMatchScript.PHASE_BETTING or int(state.get("betting_seconds_left", 0)) <= 0:
 		return false
 	if not GameConstants.SYMBOLS.has(symbol) or not GameConstants.CHIP_VALUES.has(amount):
 		return false
@@ -113,13 +127,13 @@ func place_bet(symbol: String, amount: int) -> bool:
 	return true
 
 func clear_bets() -> bool:
-	if mode != "guest" or state.get("phase", "") != DealerPartyMatchScript.PHASE_BETTING:
+	if mode != "guest" or state.get("phase", "") != DealerPartyMatchScript.PHASE_BETTING or int(state.get("betting_seconds_left", 0)) <= 0:
 		return false
 	_send_action("CLEAR_BETS", {})
 	return true
 
 func confirm_bets() -> bool:
-	if mode != "guest" or state.get("phase", "") != DealerPartyMatchScript.PHASE_BETTING:
+	if mode != "guest" or state.get("phase", "") != DealerPartyMatchScript.PHASE_BETTING or int(state.get("betting_seconds_left", 0)) <= 0:
 		return false
 	_send_action("CONFIRM_BETS", {})
 	return true
@@ -142,6 +156,8 @@ func advance() -> bool:
 	if mode != "host" or not _match.advance_round():
 		return false
 	_processed_actions.clear()
+	if _match.phase == DealerPartyMatchScript.PHASE_BETTING:
+		_begin_betting_countdown()
 	_publish_state()
 	return true
 
@@ -160,6 +176,7 @@ func leave() -> void:
 	nearby.stop_all()
 	mode = "idle"
 	room_id = ""
+	host_name = ""
 	host_endpoint = ""
 	local_seat = -1
 	local_player_id = ""
@@ -173,6 +190,8 @@ func leave() -> void:
 	_seq = 0
 	_action_seq = 0
 	_pending_action = ""
+	_betting_deadline_msec = 0
+	_last_published_betting_second = -1
 	_discovery_coarse_retry_attempted = false
 	_discovery_fine_retry_attempted = false
 	_match = DealerPartyMatchScript.new()
@@ -232,6 +251,7 @@ func _on_connection_initiated(id: String, name: String, digits: String) -> void:
 		nearby.reject_connection(id)
 		return
 	if mode == "host" and (_endpoints.size() >= MAX_CLIENTS or _match.phase != DealerPartyMatchScript.PHASE_LOBBY):
+		notice.emit("Phòng đã đủ %d máy con." % MAX_CLIENTS if _endpoints.size() >= MAX_CLIENTS else "Một máy vừa thử vào nhưng ván đã bắt đầu.")
 		nearby.reject_connection(id)
 		return
 	if mode == "guest" and id != host_endpoint:
@@ -247,7 +267,7 @@ func _on_connection_result(id: String, connected: bool, status_code: int) -> voi
 	if not connected:
 		if mode == "guest" and id == host_endpoint:
 			host_endpoint = ""
-		notice.emit("Không kết nối được (%d)." % status_code)
+			notice.emit("Không vào được phòng: phòng có thể đã đủ người hoặc đã bắt đầu." if status_code == 8004 else "Không kết nối được (%d)." % status_code)
 		changed.emit()
 		return
 	_last_seq[id] = 0
@@ -266,6 +286,8 @@ func _on_endpoint_disconnected(id: String) -> void:
 		_endpoints.erase(id)
 		_match.disconnect_player(player_id)
 		_processed_actions.clear()
+		if _match.phase == DealerPartyMatchScript.PHASE_BETTING and _match.round_number > 0:
+			_begin_betting_countdown()
 		if _match.phase == DealerPartyMatchScript.PHASE_LOBBY or _match.players.is_empty():
 			_publish_lobby()
 		else:
@@ -352,6 +374,10 @@ func _accept_client_action(id: String, kind: String, payload: Dictionary) -> voi
 		accepted = _match.grant_reward(player_id, str(payload.get("reward_id", "")))
 		message = "Đã nhận %s." % GameConstants.format_luck(DealerPartyMatchScript.REWARD_AMOUNT) if accepted else "Không thể nhận thêm Lộc lúc này."
 	else:
+		if _match.phase == DealerPartyMatchScript.PHASE_BETTING and _betting_seconds_left() <= 0:
+			_expire_betting()
+			_send_action_result(id, kind, false, "Đã hết 30 giây đặt cược.")
+			return
 		if payload.get("round") != _match.round_number:
 			_send_action_result(id, kind, false, "Lượt đặt đã hết hạn.")
 			return
@@ -371,13 +397,14 @@ func _accept_client_action(id: String, kind: String, payload: Dictionary) -> voi
 		_publish_state()
 
 func _accept_state(payload: Dictionary) -> bool:
-	if not payload.get("room") is String or not _is_int_number(payload.get("seat")) or not payload.get("player_id") is String or not payload.get("players") is Array or not payload.get("match") is Dictionary:
+	if not payload.get("room") is String or not payload.get("host_name") is String or not _is_int_number(payload.get("seat")) or not payload.get("player_id") is String or not payload.get("players") is Array or not payload.get("match") is Dictionary:
 		return false
 	var incoming_room: String = payload["room"]
+	var incoming_host_name: String = payload["host_name"]
 	var incoming_names: Array = payload["players"]
 	var incoming_player_id: String = payload["player_id"]
 	var seat := int(payload["seat"])
-	if incoming_room.length() != 6 or incoming_player_id.is_empty() or incoming_names.size() < 1 or incoming_names.size() > MAX_CLIENTS or seat < 1 or seat > MAX_CLIENTS:
+	if incoming_room.length() != 6 or incoming_host_name.is_empty() or incoming_host_name.length() > 24 or incoming_player_id.is_empty() or incoming_names.size() < 1 or incoming_names.size() > MAX_CLIENTS or seat < 1 or seat > MAX_CLIENTS:
 		return false
 	for name: Variant in incoming_names:
 		if not name is String or name.length() > 24:
@@ -388,6 +415,7 @@ func _accept_state(payload: Dictionary) -> bool:
 	if not room_id.is_empty() and incoming_room != room_id:
 		return false
 	room_id = incoming_room
+	host_name = incoming_host_name
 	local_seat = seat
 	local_player_id = incoming_player_id
 	players.clear()
@@ -398,11 +426,13 @@ func _accept_state(payload: Dictionary) -> bool:
 	return true
 
 func _valid_match(value: Dictionary, count: int) -> bool:
-	if not value.get("phase") is String or not _is_int_number(value.get("round_number")) or not value.get("players") is Array or not value.get("results") is Array or not value.get("leaderboard") is Array:
+	if not value.get("phase") is String or not _is_int_number(value.get("round_number")) or not _is_int_number(value.get("betting_seconds_left")) or not value.get("players") is Array or not value.get("results") is Array or not value.get("leaderboard") is Array:
 		return false
 	if not ["betting", "locked", "settled", "finished"].has(value["phase"]):
 		return false
 	if int(value["round_number"]) < 1 or int(value["round_number"]) > DealerPartyMatchScript.TOTAL_ROUNDS or value["players"].size() != count:
+		return false
+	if int(value["betting_seconds_left"]) < 0 or int(value["betting_seconds_left"]) > BETTING_DURATION_SECONDS:
 		return false
 	if not (value["results"].is_empty() or value["results"].size() == 3):
 		return false
@@ -432,6 +462,7 @@ func _normalize_match(value: Dictionary) -> Dictionary:
 		return {}
 	var normalized := value.duplicate(true)
 	normalized["round_number"] = int(normalized["round_number"])
+	normalized["betting_seconds_left"] = int(normalized["betting_seconds_left"])
 	var normalized_players: Array[Dictionary] = []
 	for source: Dictionary in normalized["players"]:
 		var player := source.duplicate(true)
@@ -467,6 +498,37 @@ func _sync_public_state() -> void:
 	for player: Dictionary in _match.players:
 		players.append(player["name"])
 	state = {} if _match.phase == DealerPartyMatchScript.PHASE_LOBBY else _match.snapshot()
+	if not state.is_empty():
+		state["betting_seconds_left"] = _betting_seconds_left()
+
+func _begin_betting_countdown() -> void:
+	_betting_deadline_msec = Time.get_ticks_msec() + BETTING_DURATION_SECONDS * 1000
+	_last_published_betting_second = BETTING_DURATION_SECONDS
+
+func _betting_seconds_left() -> int:
+	if _match.phase != DealerPartyMatchScript.PHASE_BETTING or _betting_deadline_msec <= 0:
+		return 0
+	var remaining_msec := maxi(0, _betting_deadline_msec - Time.get_ticks_msec())
+	return clampi(ceili(float(remaining_msec) / 1000.0), 0, BETTING_DURATION_SECONDS)
+
+func _tick_betting_countdown() -> void:
+	if mode != "host" or _match.phase != DealerPartyMatchScript.PHASE_BETTING:
+		return
+	var seconds_left := _betting_seconds_left()
+	if seconds_left <= 0:
+		_expire_betting()
+		return
+	if seconds_left != _last_published_betting_second:
+		_last_published_betting_second = seconds_left
+		_publish_state()
+
+func _expire_betting() -> void:
+	if not _match.expire_betting():
+		return
+	_betting_deadline_msec = 0
+	_last_published_betting_second = 0
+	_publish_state()
+	notice.emit("Hết 30 giây. Cược đang chọn đã được tự động xác nhận.")
 
 func _send_state(endpoint: String) -> void:
 	if not _endpoint_players.has(endpoint):
@@ -477,6 +539,7 @@ func _send_state(endpoint: String) -> void:
 		return
 	_send(endpoint, "STATE", {
 		"room": room_id,
+		"host_name": local_name,
 		"seat": int(player["seat"]),
 		"player_id": player_id,
 		"players": players,
@@ -507,6 +570,7 @@ func _close_guest_room(message: String) -> void:
 	nearby.stop_all()
 	mode = "idle"
 	room_id = ""
+	host_name = ""
 	host_endpoint = ""
 	local_seat = -1
 	local_player_id = ""

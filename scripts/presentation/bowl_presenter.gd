@@ -19,6 +19,20 @@ func _ready() -> void:
 	dice_row.modulate.a = 0.0
 	gui_input.connect(_on_gui_input)
 
+func expand_stage_visual(horizontal: float, vertical: float) -> void:
+	# Main gameplay uses a hero-sized bowl. Nearby can keep the compact authored
+	# offsets by simply not calling this method.
+	lid.offset_left -= horizontal
+	lid.offset_right += horizontal
+	lid.offset_top -= vertical
+	lid.offset_bottom += vertical
+	tray.offset_left -= horizontal * 0.72
+	tray.offset_right += horizontal * 0.72
+	tray.offset_top -= vertical * 0.45
+	tray.offset_bottom += vertical * 0.45
+	_lid_rest_offsets = _get_offsets(lid)
+	_tray_rest_offsets = _get_offsets(tray)
+
 func _get_offsets(item: Control) -> Vector4:
 	return Vector4(item.offset_left, item.offset_top, item.offset_right, item.offset_bottom)
 

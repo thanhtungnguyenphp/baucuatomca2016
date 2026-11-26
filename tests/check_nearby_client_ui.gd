@@ -31,10 +31,24 @@ func _run() -> void:
 	assert(match.add_player("p2", "Bình"))
 	assert(match.start_match())
 	_apply_snapshot(ui, match.snapshot())
-	assert(ui._role_label.text == "MÁY CON · NGƯỜI ĐẶT")
+	assert(ui._countdown_label.visible)
+	assert("30 GIÂY" in ui._countdown_label.text)
+	assert(ui._role_label.text == "BẠN · An · ĐÃ THAM GIA")
+	assert("CHỦ BÀN" in ui._host_identity.text)
+	assert("BẠN" in ui._lobby_slots[0].text)
 	assert(ui._client_controls.visible and not ui._action.visible)
+	assert(ui._chip_selector_button.visible and ui._chip_selector_button.custom_minimum_size.y >= 104)
+	assert(ui._clear_bets_button.custom_minimum_size.y >= 112)
+	assert(ui._confirm_bets_button.custom_minimum_size.y >= 112)
 	assert(not ui._cards["bau"].disabled)
+	ui._open_chip_picker()
+	assert(ui._chip_picker_overlay.visible)
+	assert(ui._chip_buttons.size() == 6)
+	for chip: Button in ui._chip_buttons.values():
+		assert(chip.custom_minimum_size.y >= 104)
 	ui._select_chip(50_000)
+	assert(not ui._chip_picker_overlay.visible)
+	assert("50K" in ui._chip_selector_button.text)
 	ui._choose("bau")
 	assert(not wire.sent.is_empty())
 	var message: Dictionary = JSON.parse_string(wire.sent.back()["bytes"].get_string_from_utf8())
@@ -44,8 +58,12 @@ func _run() -> void:
 	assert(match.place_bet("p1", "bau", 50_000))
 	assert(match.confirm_bets("p1"))
 	_apply_snapshot(ui, match.snapshot())
+	assert(ui._countdown_label.visible)
 	assert(ui._cards["bau"].disabled)
 	assert(ui._clear_bets_button.disabled and ui._confirm_bets_button.disabled)
+	assert(not ui._chip_selector_button.visible)
+	assert(not ui._clear_bets_button.visible)
+	assert("ĐÃ CHỐT" in ui._confirm_bets_button.text)
 	assert("Đã chốt cược" in ui._instruction.text)
 
 	var player := match.get_player("p1")
@@ -66,12 +84,15 @@ func _run() -> void:
 	quit(0)
 
 func _apply_snapshot(ui: Control, snapshot: Dictionary) -> void:
+	var network_snapshot := snapshot.duplicate(true)
+	network_snapshot["betting_seconds_left"] = 30 if network_snapshot.get("phase", "") == MatchScript.PHASE_BETTING else 0
 	var payload := {
 		"room": "123456",
+		"host_name": "Chủ bàn",
 		"seat": 1,
 		"player_id": "p1",
 		"players": ["An", "Bình"],
-		"match": snapshot,
+		"match": network_snapshot,
 	}
 	assert(ui.room._accept_state(payload))
 	ui._refresh()

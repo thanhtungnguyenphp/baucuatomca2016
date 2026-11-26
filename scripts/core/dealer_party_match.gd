@@ -2,7 +2,7 @@ class_name DealerPartyMatch
 extends RefCounted
 
 ## Pure Nearby v2 rules. The dealer host is intentionally not a player seat.
-const MAX_CLIENTS := 3
+const MAX_CLIENTS := 5
 const TOTAL_ROUNDS := 5
 const INITIAL_BALANCE := GameConstants.INITIAL_BALANCE
 const MIN_CHIP := 10_000
@@ -30,7 +30,7 @@ func add_player(player_id: String, display_name: String) -> bool:
 	players.append({
 		"player_id": player_id,
 		"seat": _next_seat,
-		"name": _clean_name(display_name),
+		"name": _unique_name(_clean_name(display_name)),
 		"connected": true,
 		"spectator": false,
 		"balance": INITIAL_BALANCE,
@@ -100,6 +100,23 @@ func confirm_bets(player_id: String) -> bool:
 	player["ready"] = true
 	if all_active_ready():
 		phase = PHASE_LOCKED
+	return true
+
+func expire_betting() -> bool:
+	if phase != PHASE_BETTING:
+		return false
+	# The host owns the deadline. At timeout, preserve every valid pending bet
+	# instead of discarding a client's last-second input. Players who did not bet
+	# are marked ready with a zero stake so they cannot hold the room open.
+	for player: Dictionary in players:
+		if not player["connected"] or player["spectator"] or player["ready"]:
+			continue
+		var stake := _total_bet(player)
+		if stake > 0:
+			player["balance"] = int(player["balance"]) - stake
+		player["round_stake"] = stake
+		player["ready"] = true
+	phase = PHASE_LOCKED
 	return true
 
 func all_active_ready() -> bool:
@@ -268,5 +285,23 @@ func _player_index(player_id: String) -> int:
 	return -1
 
 func _clean_name(value: String) -> String:
-	var clean := value.strip_edges().substr(0, 24)
+	var clean := value.strip_edges().replace("\n", " ").replace("\r", " ")
+	while "  " in clean:
+		clean = clean.replace("  ", " ")
+	clean = clean.substr(0, 24)
 	return clean if not clean.is_empty() else "Người chơi"
+
+func _unique_name(base_name: String) -> String:
+	var used: Dictionary = {}
+	for player: Dictionary in players:
+		used[str(player.get("name", "")).to_lower()] = true
+	if not used.has(base_name.to_lower()):
+		return base_name
+	var suffix := 2
+	while suffix <= MAX_CLIENTS + 1:
+		var marker := " (%d)" % suffix
+		var candidate := base_name.left(maxi(1, 24 - marker.length())) + marker
+		if not used.has(candidate.to_lower()):
+			return candidate
+		suffix += 1
+	return base_name.left(17) + " (khác)"

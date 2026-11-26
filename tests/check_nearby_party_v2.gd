@@ -39,7 +39,7 @@ func _run() -> void:
 	host.create_room("Chủ bàn")
 	assert(host.local_seat == -1 and host.players.is_empty())
 
-	for index in 3:
+	for index in AdapterScript.MAX_CLIENTS:
 		var guest = AdapterScript.new()
 		var wire := FakeNearby.new()
 		guest.nearby = wire
@@ -54,10 +54,21 @@ func _run() -> void:
 		_drain_guest(index)
 		_drain_host()
 
-	assert(host.players.size() == 3) # Host is dealer, not a fourth player.
+	assert(host.players.size() == 5) # Host is dealer, not a sixth player.
 	for guest in guests:
-		assert(guest.players.size() == 3)
+		assert(guest.players.size() == 5)
+		assert(guest.host_name == "Chủ bàn")
 		assert(guest.local_seat >= 1 and not guest.local_player_id.is_empty())
+	# A sixth client is outside the product limit and is disconnected before the match.
+	host._on_connection_result("guest6", true, 0)
+	host._on_payload("guest6", JSON.stringify({
+		"v": AdapterScript.PROTOCOL_VERSION,
+		"room": "",
+		"seq": 1,
+		"type": "HELLO",
+		"payload": {"name": "Khách 6"},
+	}).to_utf8_buffer())
+	assert(host_wire.disconnected.has("guest6"))
 	assert(host.start_match())
 	_drain_host()
 	assert(host.state["phase"] == "betting")
@@ -76,7 +87,7 @@ func _run() -> void:
 		assert(guest.state["phase"] == "locked")
 	# Replaying an accepted action_id with a newer transport seq cannot double the bet.
 	var duplicate := {
-		"v": 2,
+		"v": AdapterScript.PROTOCOL_VERSION,
 		"room": host.room_id,
 		"seq": 100,
 		"type": "PLACE_BET",
@@ -92,11 +103,12 @@ func _run() -> void:
 	for guest in guests:
 		assert(guest.state["results"] == host.state["results"])
 		assert(guest.state["leaderboard"] == host.state["leaderboard"])
+	assert(JSON.stringify(host.state).to_utf8_buffer().size() < AdapterScript.MAX_MESSAGE_BYTES)
 
 	# An unsupported client message cannot forge host-owned state.
 	var before: Dictionary = host.state.duplicate(true)
 	var forged := {
-		"v": 2,
+		"v": AdapterScript.PROTOCOL_VERSION,
 		"room": host.room_id,
 		"seq": 999,
 		"type": "STATE",
@@ -110,7 +122,7 @@ func _run() -> void:
 	assert(host.state["round_number"] == 2 and host.state["phase"] == "betting")
 	# A validly shaped action from an older round is rejected.
 	var stale := {
-		"v": 2,
+		"v": AdapterScript.PROTOCOL_VERSION,
 		"room": host.room_id,
 		"seq": 100,
 		"type": "PLACE_BET",
@@ -151,12 +163,12 @@ func _run() -> void:
 	assert(host._match.get_player(remaining_id)["balance"] == locked_balance + 50_000)
 	assert(host.state["phase"] == "betting")
 
-	# A v1 peer is explicitly rejected instead of silently corrupting the room.
-	var old_message := {"v": 1, "room": host.room_id, "seq": 1000, "type": "CHOICE", "payload": {}}
+	# A previous v3 peer is explicitly rejected instead of joining a room without the countdown contract.
+	var old_message := {"v": 3, "room": host.room_id, "seq": 1000, "type": "CHOICE", "payload": {}}
 	host._on_payload("guest1", JSON.stringify(old_message).to_utf8_buffer())
 	assert(host_wire.disconnected.has("guest1"))
 
-	print("Nearby party protocol v2 passed")
+	print("Nearby party protocol v4 six-device flow passed")
 	quit(0)
 
 func _drain_guest(index: int) -> void:

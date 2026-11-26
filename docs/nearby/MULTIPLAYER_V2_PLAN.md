@@ -1,12 +1,12 @@
 # Kế hoạch tối ưu chơi gần nhau v2
 
-**Ngày cập nhật:** 16/11/2026  
-**Trạng thái:** đã lập kế hoạch, chờ duyệt trước khi triển khai code  
+**Ngày cập nhật:** 22/11/2026
+**Trạng thái:** v2 đã triển khai; đang QA phản hồi kết quả và hồ sơ người chơi
 **Nhánh:** `codex/feature-nearby-connections`
 
 ## 1. Mục tiêu sản phẩm
 
-Chuyển chế độ Nearby từ mô hình host cũng là người chơi sang mô hình **một máy chủ điều khiển bàn và một đến ba máy con đặt cược**. Tổng giới hạn giữ ở bốn thiết bị: một host và tối đa ba client.
+Chế độ Nearby dùng mô hình **một máy chủ điều khiển bàn và một đến năm máy con đặt cược**. Tổng giới hạn là sáu thiết bị: một host và tối đa năm client. Bản hiện tại dùng protocol/service v4 để mọi máy cùng hiểu countdown cược authoritative 30 giây và không ghép nhầm client v3 trở về trước.
 
 - Host tạo phòng, duyệt kết nối, bắt đầu ván, lắc/mở/đậy tô và phát trạng thái chính thức.
 - Host không có số dư, không được chọn chip hoặc đặt cược và không xuất hiện trên leaderboard.
@@ -80,6 +80,14 @@ Development dùng rewarded test unit của Google. Trước release cần một 
 - Dùng anchored adaptive banner ở đáy màn hình.
 - Nút hành động nằm trên banner với khoảng cách an toàn; game dành vùng bằng chiều cao banner cộng navigation safe area.
 - `Main` và `NearbyPartyMode` cùng lắng nghe `banner_visibility_changed`; khi banner load fail, trả vùng trống lại cho nội dung.
+
+### Lobby nhiều thiết bị và khả năng khám phá
+
+- Màn hình chính có CTA riêng **Chơi cùng bạn ở gần**, không giấu trong Hành trình/Nhiệm vụ.
+- Lobby luôn thể hiện ba ghế client và tiến trình: nhập tên → tạo/tìm phòng → so mã → chờ bạn → bắt đầu.
+- Mỗi yêu cầu `connection_initiated` được đưa vào hàng đợi FIFO. Chỉ hiện một mã xác thực tại một thời điểm; xác nhận/từ chối xong mới chuyển yêu cầu kế tiếp để hai client vào đồng thời không ghi đè nhau.
+- Host có thể bắt đầu với 1–5 client, nhưng khi chưa đủ năm phải xác nhận rõ là bắt đầu ngay hay tiếp tục chờ. Sau khi ván đã bắt đầu, yêu cầu mới bị từ chối với thông báo phòng đang chơi hoặc đã đầy.
+- Tên thương mại trong UI là “chơi gần nhau”; chú thích kỹ thuật nói rõ Nearby có thể phối hợp Bluetooth và Wi-Fi, không tuyên bố đây là kết nối Bluetooth thuần.
 - Debug chỉ dùng test ad unit. Ghi log trạng thái consent, SDK init, load, loaded, no-fill và failure.
 - Banner không che nút, popup, bàn cược hoặc nằm sát vùng chạm để tránh click nhầm.
 
@@ -93,7 +101,7 @@ Development dùng rewarded test unit của Google. Trước release cần một 
 6. Đồng bộ payout và leaderboard.
 7. Tích hợp Rewarded Ad và lifecycle guard.
 8. Sửa UMP, banner adaptive và safe area.
-9. Test hai máy hai chiều, sau đó một host + ba client.
+9. Test hai máy hai chiều, sau đó tăng dần một host + ba client và một host + năm client.
 10. Cập nhật Privacy Policy, Data safety, release note và build internal test.
 
 ## 8. Cổng nghiệm thu
@@ -104,13 +112,13 @@ Development dùng rewarded test unit của Google. Trước release cần một 
 - Reward chỉ cấp qua callback hoàn thành; reward không tác động thứ hạng.
 - Xem rewarded ad không làm mất phòng.
 - Banner hiển thị dưới nút trên hai tỷ lệ 720×1650 và 1080×2400, không che UI.
-- Một host + ba client chơi đủ năm lượt và rematch trên thiết bị thật.
+- Một host + năm client chơi đủ năm lượt và rematch trên thiết bị thật.
 
 ## 9. Bộ giá trị đề xuất cần duyệt trước khi code
 
 | Quyết định | Giá trị đề xuất | Lý do |
 | --- | --- | --- |
-| Quy mô phòng | 1 host + 1–3 client, tối đa 4 thiết bị | Giữ đúng giới hạn transport và UI hiện tại. |
+| Quy mô phòng | 1 host + 1–5 client, tối đa 6 thiết bị | Protocol v4; lobby cuộn, thẻ cược thu gọn và countdown host 30 giây cho mỗi lượt. |
 | Balance đầu phòng | 1.000.000 Lộc riêng cho phiên Nearby | Đồng nhất với `GameConstants.INITIAL_BALANCE`, công bằng giữa các máy và không làm thay đổi save local. |
 | Chip | 10.000, 20.000, 50.000, 100.000, 200.000, 500.000 | Tái sử dụng asset/UX và hằng số hiện tại. |
 | Số cửa được đặt | Nhiều linh vật trong cùng lượt | Giống chế độ một máy và luật payout hiện có. |
@@ -121,4 +129,13 @@ Development dùng rewarded test unit của Google. Trước release cần một 
 | Leaderboard | Xếp theo `total_net`; reward không tính vào hạng | Người xem quảng cáo không được lợi thế thứ hạng. |
 
 Nếu không có điều chỉnh, NBY-15 sẽ dùng bộ giá trị này làm mặc định.
+
+## 10. Nhận diện người chơi và phản hồi tương tác
+
+- Tên hiển thị được lưu cục bộ, làm sạch và gửi trong `HELLO`; host là nguồn tên chính thức và tự thêm hậu tố khi hai client nhập giống nhau.
+- Host vẫn là dealer, không có seat. Tên host chỉ xuất hiện trong badge vai trò/phòng; leaderboard chỉ gồm client.
+- Mỗi dòng cược phải chứa tên và số Lộc. Mỗi dòng kết quả chứa hạng, tên, THẮNG/HÒA/THUA, net lượt và tổng net; máy con đánh dấu chính mình bằng `BẠN`.
+- Sau reveal, sprite cũ chạy nhịp chuyển động ngắn rồi chuyển sang atlas reaction mới. Cửa trúng hiện `TRÚNG ×n`, viền vàng và pulse; cửa hụt giảm sáng, lắc nhẹ và hiện `KHÔNG TRÚNG`.
+- Hiệu ứng thắng/thua chỉ dựa trên snapshot authoritative, không sinh thêm message mạng và không thay đổi payout. `reduce_motion` rút animation về thời lượng tối thiểu.
+- Chỉ client phát phản hồi thắng/thua cá nhân. Host hiển thị tóm tắt tất cả client để tránh hiểu nhầm chủ phòng cũng tham gia cược.
 

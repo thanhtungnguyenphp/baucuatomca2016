@@ -370,6 +370,13 @@ theme_override_colors/font_color = Color(1, 0.61, 0.51, 1)
 theme_override_font_sizes/font_size = 28
 text = "XÓA TIẾN TRÌNH CỤC BỘ"
 
+[node name="VersionLabel" type="Label" parent="SettingsPopup/Margin/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.69, 0.62, 1)
+theme_override_font_sizes/font_size = 23
+text = "Bầu Cua Tôm Cá · Phiên bản 1.4.1 (8)"
+horizontal_alignment = 1
+
 [node name="Spacer" type="Control" parent="SettingsPopup/Margin/Content"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 18)

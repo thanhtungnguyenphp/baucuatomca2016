@@ -35,7 +35,11 @@ func _run() -> void:
 	ui._shown_phase = "settled" # Skip animation; this test checks presentation text.
 	ui._refresh()
 	assert("1. An" in ui._scores_label.text)
+	assert("THẮNG" in ui._scores_label.text and "THUA" in ui._scores_label.text)
 	assert("+100.000 Lộc" in ui._scores_label.text)
+	ui._play_result_feedback(["bau", "bau", "ca"])
+	assert(ui._cards["bau"].result_state == MascotCard.RESULT_HIT)
+	assert(ui._cards["cua"].result_state == MascotCard.RESULT_MISS)
 	assert(match.get_player("p1")["balance"] == 1_100_000)
 	assert(match.get_player("p2")["balance"] == 950_000)
 

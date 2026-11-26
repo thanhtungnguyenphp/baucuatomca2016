@@ -29,6 +29,8 @@ var _loading_rewarded := false
 var _initializing_ads := false
 var _ads_initialized := false
 var _ads_load_started := false
+var _banner_loaded := false
+var _banner_route_allowed := false
 var _banner_visible := false
 var _fullscreen_ad_active := false
 var _reward_request_id := ""
@@ -104,13 +106,13 @@ func _load_ads() -> void:
 		banner_size = AdSize.BANNER
 	_banner = AdView.new(banner_id, banner_size, AdPosition.BOTTOM)
 	_banner.ad_listener.on_ad_loaded = func() -> void:
-		_banner_visible = true
-		banner_visibility_changed.emit(true)
+		_banner_loaded = true
+		_apply_banner_visibility()
 		ad_status_changed.emit("Banner loaded: %dx%d px" % [_banner.get_width_in_pixels(), _banner.get_height_in_pixels()])
 		print("[AdMob] Banner loaded")
 	_banner.ad_listener.on_ad_failed_to_load = func(error: LoadAdError) -> void:
-		_banner_visible = false
-		banner_visibility_changed.emit(false)
+		_banner_loaded = false
+		_apply_banner_visibility()
 		ad_status_changed.emit("Banner load failed: " + error.message)
 		push_warning("[AdMob] Banner load failed: " + error.message)
 	_banner.load_ad(AdRequest.new())
@@ -226,6 +228,27 @@ func is_configured() -> bool:
 
 func is_banner_visible() -> bool:
 	return _banner_visible
+
+func is_banner_allowed() -> bool:
+	return _banner_route_allowed
+
+func set_banner_allowed(allowed: bool) -> void:
+	if _banner_route_allowed == allowed:
+		return
+	_banner_route_allowed = allowed
+	_apply_banner_visibility()
+
+func _apply_banner_visibility() -> void:
+	var should_show := _banner_loaded and _banner_route_allowed
+	if _banner != null:
+		if should_show:
+			_banner.show()
+		else:
+			_banner.hide()
+	if _banner_visible == should_show:
+		return
+	_banner_visible = should_show
+	banner_visibility_changed.emit(_banner_visible)
 
 func is_rewarded_ready() -> bool:
 	return _rewarded != null and not _fullscreen_ad_active

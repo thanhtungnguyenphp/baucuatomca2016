@@ -29,8 +29,8 @@ tài khoản vào repository.
 - [x] Tạo preset `Android Debug APK` và `Google Play AAB` với package ID chính
       thức, ARMv7/ARM64 và quyền `VIBRATE`.
 - [x] Export APK debug và AAB debug; kiểm tra manifest package/version/SDK/quyền.
-- [ ] Tạo keystore release, ký AAB release và sao lưu khóa ở kho bí mật ngoài repository.
-- [x] Xuất AAB release 1.3.0/code 6, xác minh chữ ký trùng bản trước và chạy `bundletool validate` thành công.
+- [x] Tạo upload keystore, ký AAB release và giữ khóa ngoài source; chủ dự án vẫn phải xác nhận bản sao lưu an toàn.
+- [x] Xóa artifact/cache cũ và xuất AAB release sạch `1.4.1`/code `8`; xác minh chữ ký trùng AAB trước, manifest, ZIP và chữ ký JAR hợp lệ.
 - [ ] Test internal track qua Google Play: cài mới, update, offline, xoay màn
       hình, background/foreground, tắt âm/rung và xóa tiến trình.
 
@@ -50,7 +50,7 @@ tài khoản vào repository.
 
 ## Gate trước khi gửi Store
 
-- [x] Toàn bộ 12 bộ test automation hiện có chạy đạt; AAB release validate thành công.
+- [x] Toàn bộ 21 bộ test automation hiện có chạy đạt; AAB release ký thành công và manifest cuối đã kiểm tra.
 - [ ] Có thiết bị thật xác nhận audio, haptic và lựa chọn giảm chuyển động.
 - [ ] Metadata, age rating và Privacy Policy khớp với hành vi thực tế.
 - [ ] Không có bất kỳ đường dẫn thanh toán, nạp tiền hay quy đổi phần thưởng nào.

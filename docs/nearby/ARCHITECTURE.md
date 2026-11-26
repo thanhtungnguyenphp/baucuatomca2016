@@ -50,7 +50,7 @@ Một instance chỉ vận hành một phiên quảng bá hoặc khám phá. Plu
 
 ## 4. Topology và vòng đời
 
-Chế độ 2–4 người dùng `P2P_STAR`: host là hub, tối đa ba guest là spoke. Khách chỉ kết nối host. Host có thể ngừng advertising khi đủ người và ngừng khám phá khi đã chọn host để giảm tiêu hao radio. Phần game giới hạn số người; plugin chỉ cung cấp kết nối và trạng thái.
+Chế độ 2–6 thiết bị dùng `P2P_STAR`: host là hub, tối đa năm guest là spoke. Khách chỉ kết nối host. Host có thể ngừng advertising khi đủ người và ngừng khám phá khi đã chọn host để giảm tiêu hao radio. Phần game giới hạn số người; plugin chỉ cung cấp kết nối và trạng thái.
 
 ```text
 IDLE → CHECKING → ADVERTISING / DISCOVERING → PAIRING
@@ -64,7 +64,7 @@ IDLE → CHECKING → ADVERTISING / DISCOVERING → PAIRING
 
 ## 5. Tích hợp riêng cho Bầu Cua
 
-`party_mode.gd` hiện gộp UI với state chơi cùng một máy. Bản thử v1 đã rút logic năm lượt thành `PartyMatch` và đi qua `PartyNearbyAdapter`. Bản v2 tiếp tục tách model thuần nhưng đổi ý nghĩa seat: host là dealer, không nằm trong mảng người chơi; chỉ một đến ba client có balance, bets và leaderboard. Đây là thay đổi của game, không nằm trong gói plugin.
+`party_mode.gd` hiện gộp UI với state chơi cùng một máy. Bản thử v1 đã rút logic năm lượt thành `PartyMatch` và đi qua `PartyNearbyAdapter`. Protocol v4 dùng model dealer/client: host là dealer, không nằm trong mảng người chơi, đồng thời giữ deadline 30 giây và phát `betting_seconds_left`; một đến năm client có balance, bets và leaderboard. Đây là thay đổi của game, không nằm trong gói plugin.
 
 Envelope thông điệp game đề xuất:
 

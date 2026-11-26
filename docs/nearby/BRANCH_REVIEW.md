@@ -8,7 +8,7 @@
 
 ## Mục tiêu
 
-Xây dựng lớp kết nối thiết bị gần nhau có thể dùng lại cho nhiều game Godot hoặc ứng dụng Android. Sau khi kiểm chứng transport, game Bầu Cua sẽ dùng một máy làm host quyết định kết quả, tối đa ba máy khách, cùng chơi một trận năm lượt. Chế độ chơi cùng máy hiện tại vẫn độc lập.
+Xây dựng lớp kết nối thiết bị gần nhau có thể dùng lại cho nhiều game Godot hoặc ứng dụng Android. Game Bầu Cua dùng một máy làm host quyết định kết quả và countdown cược, tối đa năm máy khách, cùng chơi một trận năm lượt. Chế độ chơi cùng máy hiện tại vẫn độc lập; phòng sáu thiết bị dùng protocol/service v4.
 
 ## Những gì đã có trên nhánh
 

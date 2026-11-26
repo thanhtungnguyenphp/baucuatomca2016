@@ -5,11 +5,13 @@ signal settings_changed
 
 const SAVE_PATH := "user://settings.cfg"
 const SECTION := "accessibility"
+const PROFILE_SECTION := "profile"
 
 var haptics_enabled := true
 var reduce_motion := false
 var sound_enabled := true
 var onboarding_seen := false
+var player_name := "Người chơi"
 
 func _ready() -> void:
 	_load_settings()
@@ -41,6 +43,15 @@ func mark_onboarding_seen() -> void:
 	onboarding_seen = true
 	_save_settings()
 
+func set_player_name(value: String) -> String:
+	var clean := _clean_player_name(value)
+	if player_name == clean:
+		return player_name
+	player_name = clean
+	_save_settings()
+	settings_changed.emit()
+	return player_name
+
 func animation_duration(seconds: float) -> float:
 	return 0.01 if reduce_motion else seconds
 
@@ -52,6 +63,9 @@ func shake_feedback() -> void:
 
 func reward_feedback() -> void:
 	_vibrate(55, 0.60)
+
+func loss_feedback() -> void:
+	_vibrate(24, 0.24)
 
 func _vibrate(duration_ms: int, amplitude: float) -> void:
 	if haptics_enabled:
@@ -65,6 +79,7 @@ func _load_settings() -> void:
 	reduce_motion = bool(config.get_value(SECTION, "reduce_motion", false))
 	sound_enabled = bool(config.get_value(SECTION, "sound_enabled", true))
 	onboarding_seen = bool(config.get_value(SECTION, "onboarding_seen", false))
+	player_name = _clean_player_name(str(config.get_value(PROFILE_SECTION, "player_name", "Người chơi")))
 
 func _save_settings() -> void:
 	var config := ConfigFile.new()
@@ -72,6 +87,14 @@ func _save_settings() -> void:
 	config.set_value(SECTION, "reduce_motion", reduce_motion)
 	config.set_value(SECTION, "sound_enabled", sound_enabled)
 	config.set_value(SECTION, "onboarding_seen", onboarding_seen)
+	config.set_value(PROFILE_SECTION, "player_name", player_name)
 	var error := config.save(SAVE_PATH)
 	if error != OK:
 		push_warning("Không thể lưu thiết lập cục bộ: %s" % error)
+
+func _clean_player_name(value: String) -> String:
+	var clean := value.strip_edges().replace("\n", " ").replace("\r", " ")
+	while "  " in clean:
+		clean = clean.replace("  ", " ")
+	clean = clean.substr(0, 24)
+	return clean if not clean.is_empty() else "Người chơi"

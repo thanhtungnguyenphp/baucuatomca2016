@@ -1,0 +1,25 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: CuaTop,Arial,68,&H004DE7FF,&H000000FF,&H00270A58,&H70000000,-1,0,0,0,100,100,0,0,1,8,2,8,70,70,250,1
+Style: GaTop,Arial,68,&H00F4FFF4,&H000000FF,&H0019562C,&H70000000,-1,0,0,0,100,100,0,0,1,8,2,8,70,70,250,1
+Style: BothTop,Arial,76,&H00FFFFFF,&H000000FF,&H00231AA8,&H70000000,-1,0,0,0,100,100,0,0,1,9,2,8,70,70,250,1
+Style: GaBottom,Arial,68,&H00F4FFF4,&H000000FF,&H0019562C,&H70000000,-1,0,0,0,100,100,0,0,1,8,2,2,70,70,290,1
+Style: CuaBottom,Arial,68,&H004DE7FF,&H000000FF,&H00270A58,&H70000000,-1,0,0,0,100,100,0,0,1,8,2,2,70,70,290,1
+Style: Narrator,Arial,70,&H00FFF2C2,&H000000FF,&H00180B69,&H70000000,-1,0,0,0,100,100,0,0,1,8,2,8,70,70,250,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.05,0:00:01.25,CuaTop,Cua,0,0,0,,Cua: Suỵt… Lộc này vô chủ!
+Dialogue: 0,0:00:01.25,0:00:02.72,GaTop,Gà,0,0,0,,Gà: Ê! Cua kia, đứng lại!
+Dialogue: 0,0:00:02.75,0:00:03.60,CuaTop,Cua,0,0,0,,Cua: Bắt được thì lấy!
+Dialogue: 0,0:00:04.00,0:00:04.62,BothTop,Cả hai,0,0,0,,Cả hai: Úi daaa!
+Dialogue: 0,0:00:05.10,0:00:06.20,GaBottom,Gà,0,0,0,,Gà: Bắt quả tang nhé!
+Dialogue: 0,0:00:06.20,0:00:07.62,CuaBottom,Cua,0,0,0,,Cua: Tui chỉ… giữ hộ thôi mà!
+Dialogue: 0,0:00:07.60,0:00:09.00,Narrator,Dẫn,0,0,0,,Lắc tô — mở bất ngờ!

@@ -1,16 +1,15 @@
 extends SceneTree
 
-const TEST_PATH := "user://journey-test.cfg"
-
 func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
-	var absolute_path := ProjectSettings.globalize_path(TEST_PATH)
-	if FileAccess.file_exists(TEST_PATH):
+	var test_path := OS.get_temp_dir().path_join("bau-cua-journey-test-%d.cfg" % OS.get_process_id())
+	var absolute_path := ProjectSettings.globalize_path(test_path)
+	if FileAccess.file_exists(test_path):
 		DirAccess.remove_absolute(absolute_path)
 	var progress: Variant = load("res://scripts/core/engagement_progress.gd").new()
-	progress.save_path = TEST_PATH
+	progress.save_path = test_path
 	root.add_child(progress)
 	progress.reset()
 	var favorite: String = progress.get_daily_favorite()
@@ -29,7 +28,7 @@ func _run() -> void:
 	root.remove_child(progress)
 	progress.free()
 	var restored: Variant = load("res://scripts/core/engagement_progress.gd").new()
-	restored.save_path = TEST_PATH
+	restored.save_path = test_path
 	root.add_child(restored)
 	assert(restored.is_daily_complete())
 	assert(restored.theme_id == "dem")

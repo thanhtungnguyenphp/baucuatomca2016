@@ -1,12 +1,14 @@
 # Nearby Connections: kế hoạch plugin dùng lại
 
+Báo cáo nền protocol v3 ngày 23/11/2026: [UPDATE_REPORT_2026-11-23.md](UPDATE_REPORT_2026-11-23.md). Trạng thái hiện tại đã nâng lên protocol v4 với countdown cược authoritative 30 giây; xem [PROGRESS.md](PROGRESS.md).
+
 **Trạng thái:** transport và game v1 đã chạy trên hai máy; phiên bản tối ưu host chỉ điều khiển bàn đang ở bước tài liệu/chờ duyệt, chưa triển khai code. Xem [kế hoạch v2](MULTIPLAYER_V2_PLAN.md) và [tiến độ](PROGRESS.md).
 **Ngày cập nhật:** 16/11/2026.
 **Ứng dụng tham chiếu:** Bầu Cua Tôm Cá — Lộc Xuân, Godot 4.7.1, Android.
 
 ## Quyết định đề xuất
 
-Xây dựng **Google Nearby Connections** theo mô hình một máy chủ phòng và tối đa ba máy khách. Đây là API truyền dữ liệu trực tiếp giữa thiết bị gần nhau; nó tự chọn Bluetooth, BLE hoặc Wi‑Fi và không cần kết nối Internet để chơi. “Nearby devices” là nhóm quyền Android, không phải tên giao thức truyền tải. Giải pháp cần **Google Play services** trên máy Android. Chế độ chơi cùng một máy hiện có tiếp tục hoạt động độc lập.
+Xây dựng **Google Nearby Connections** theo mô hình một máy chủ phòng và tối đa năm máy khách. Đây là API truyền dữ liệu trực tiếp giữa thiết bị gần nhau; nó tự chọn Bluetooth, BLE hoặc Wi‑Fi và không cần kết nối Internet để chơi. “Nearby devices” là nhóm quyền Android, không phải tên giao thức truyền tải. Giải pháp cần **Google Play services** trên máy Android. Chế độ chơi cùng một máy hiện có tiếp tục hoạt động độc lập.
 
 Thiết kế thành hai gói tách biệt:
 
@@ -17,8 +19,8 @@ Mỗi ứng dụng cấp `service_id` riêng khi chạy. Plugin không gắn c�
 
 ## Phạm vi bản đầu
 
-- Android, Godot 4.7.x, 2–4 thiết bị, topology `P2P_STAR`, một host quyết định trạng thái ván.
-- Mô hình v2: một host chỉ điều khiển bàn và một đến ba client đặt Lộc; host không phải người chơi.
+- Android, Godot 4.7.x, 2–6 thiết bị, topology `P2P_STAR`, một host quyết định trạng thái ván.
+- Mô hình protocol v4: một host chỉ điều khiển bàn và countdown cược 30 giây; một đến năm client đặt Lộc, host không phải người chơi.
 - Gửi `BYTES` payload nhỏ; không chuyển file/stream.
 - Vào phòng, xác nhận mã kết nối, client đặt cược, host lắc, đồng bộ payout/leaderboard, chơi lại hoặc rời phòng.
 - Thiết bị không hỗ trợ Nearby vẫn chơi được chế độ cục bộ.

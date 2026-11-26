@@ -4,7 +4,7 @@ extends Node
 ## Procedural placeholder SFX keeps the prototype self-contained. Replace these
 ## generated streams with approved mastered assets before release.
 
-enum Cue { TAP, SHAKE, REVEAL, WIN }
+enum Cue { TAP, SHAKE, REVEAL, WIN, LOSE }
 
 const SAMPLE_RATE := 22_050
 const PLAYER_COUNT := 4
@@ -18,6 +18,7 @@ func _ready() -> void:
 		Cue.SHAKE: _make_tone(150.0, 0.20, 0.10, 0.78),
 		Cue.REVEAL: _make_tone(520.0, 0.10, 0.13, 1.08),
 		Cue.WIN: _make_chime(),
+		Cue.LOSE: _make_loss_tone(),
 	}
 	for _index in PLAYER_COUNT:
 		var player := AudioStreamPlayer.new()
@@ -62,6 +63,20 @@ func _make_chime() -> AudioStreamWAV:
 			+ 0.55 * sin(TAU * 783.99 * time)
 			+ 0.25 * sin(TAU * 987.77 * time)
 		) * 0.12 * envelope
+		_write_pcm16(samples, frame * 2, waveform)
+	return _to_stream(samples)
+
+func _make_loss_tone() -> AudioStreamWAV:
+	var seconds := 0.34
+	var frame_count := int(SAMPLE_RATE * seconds)
+	var samples := PackedByteArray()
+	samples.resize(frame_count * 2)
+	for frame in frame_count:
+		var time := float(frame) / SAMPLE_RATE
+		var progress := float(frame) / frame_count
+		var frequency := lerpf(260.0, 145.0, progress)
+		var envelope := pow(1.0 - progress, 1.8)
+		var waveform := (sin(TAU * frequency * time) + 0.15 * sin(TAU * frequency * 0.5 * time)) * 0.10 * envelope
 		_write_pcm16(samples, frame * 2, waveform)
 	return _to_stream(samples)
 

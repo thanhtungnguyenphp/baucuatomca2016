@@ -3,7 +3,7 @@
 ## Cấu hình hiện tại
 
 - Package ID: `vn.lamgame.baucuatomca`
-- Version: `0.1.0` / version code `1`
+- Version: `1.4.1` / version code `8`
 - Min SDK: `24`; Target/Compile SDK: `36`
 - ABI: `armeabi-v7a`, `arm64-v8a`
 - Quyền duy nhất được thêm: `android.permission.VIBRATE`
@@ -41,8 +41,11 @@ trong máy/CI thay vì ghi vào `export_presets.cfg`.
 
 - APK debug đã export và ký debug thành công.
 - AAB debug Gradle đã export thành công.
+- AAB release sạch `1.4.1`/code `8` đã export tại
+  `export/android/bau-cua-tom-ca-v1.4.1-code8.aab`; chữ ký trùng upload key của
+  bản `1.3.0`/code `6` và `jarsigner` xác nhận `jar verified`.
 - Manifest APK đã kiểm tra bằng Android `aapt`: package ID, SDK 24/36, version
-  `1`/`0.1.0` và quyền `VIBRATE` đều đúng.
+  và các quyền bắt buộc đều đúng; kiểm tra lại sau mỗi lần tăng version.
 - Manifest AAB debug cũng đã kiểm tra: package ID và quyền `VIBRATE` có mặt.
 
 ## Còn cần thực hiện trên thiết bị
