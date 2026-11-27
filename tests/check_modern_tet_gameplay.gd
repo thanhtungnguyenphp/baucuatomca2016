@@ -18,17 +18,17 @@ func _run() -> void:
 		await process_frame
 		assert(ui.brand_label.text == "lamgame.vn")
 		assert(ui.hud_panel.visible)
-		assert(ui.shake_button.custom_minimum_size.y >= 96)
-		assert(ui.shake_button.disabled)
-		assert("LẮC" in ui.shake_button.text)
-		assert(ui.session_summary_panel.visible)
+		assert(ui.tap_hint_button.custom_minimum_size.y >= 56)
+		assert(ui.tap_hint_button.custom_minimum_size.x < 700)
+		assert(not ui.tap_hint_button.disabled)
+		assert(ui.bowl_halo != null)
 		assert(not ui.get_node("SafeHeader/Actions").visible)
-		assert("CHẠM" in ui.results_label.text and "LẮC" in ui.results_label.text)
+		assert("CHẠM" in ui.results_label.text.to_upper() and "LẮC" in ui.results_label.text.to_upper())
+		assert("CHƠI CÙNG BẠN Ở GẦN" in ui.nearby_quick_button.text)
 		assert(ads.is_banner_allowed())
 		assert(session.place_bet("bau"))
 		await process_frame
-		assert(not ui.shake_button.disabled)
-		assert("LẮC" in ui.shake_button.text)
+		assert(not ui.tap_hint_button.disabled)
 		ui._open_header_menu()
 		assert(ads.is_banner_allowed())
 		ui._close_header_menu()
@@ -39,11 +39,10 @@ func _run() -> void:
 		await process_frame
 		assert(ads.is_banner_allowed())
 		ui._on_banner_visibility_changed(true)
-		var shake_rect: Rect2 = ui.shake_button.get_global_rect()
-		var summary_rect: Rect2 = ui.session_summary_panel.get_global_rect()
+		var chip_rect: Rect2 = ui.chip_grid.get_global_rect()
 		var nearby_rect: Rect2 = ui.nearby_quick_button.get_global_rect()
-		if shake_rect.end.y > summary_rect.position.y or summary_rect.end.y > nearby_rect.position.y:
-			printerr("Primary action, summary or Nearby CTA overlaps at ", viewport_size)
+		if chip_rect.end.y > nearby_rect.position.y:
+			printerr("Bet controls overlap the Nearby CTA at ", viewport_size)
 			quit(1)
 		ui.queue_free()
 		await process_frame

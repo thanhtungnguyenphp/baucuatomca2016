@@ -15,11 +15,12 @@ general/android/app_id="ca-app-pub-6352554924566967~6336109870"
 [application]
 
 config/name="Bầu Cua Tôm Cá — Lộc Xuân"
-config/version="1.4.1"
+config/version="1.4.2"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/bg_color=Color(0.31, 0.055, 0.075, 1)
-boot_splash/show_image=false
+boot_splash/stretch_mode=0
+boot_splash/image="res://assets/art/splash-emblem.png"
 config/icon="res://assets/art/bau-cua-home-emblem.png"
 
 [autoload]

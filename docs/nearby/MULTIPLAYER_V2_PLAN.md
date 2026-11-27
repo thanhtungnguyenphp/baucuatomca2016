@@ -1,8 +1,9 @@
 # Kế hoạch tối ưu chơi gần nhau v2
 
-**Ngày cập nhật:** 22/11/2026
-**Trạng thái:** v2 đã triển khai; đang QA phản hồi kết quả và hồ sơ người chơi
-**Nhánh:** `codex/feature-nearby-connections`
+**Ngày cập nhật:** 27/11/2026
+**Trạng thái:** protocol v4/v2 gameplay đã triển khai và phát hành Android;
+đang QA tải 1+3/1+5, reconnect và lifecycle radio/background
+**Nhánh tích hợp:** `main`
 
 ## 1. Mục tiêu sản phẩm
 

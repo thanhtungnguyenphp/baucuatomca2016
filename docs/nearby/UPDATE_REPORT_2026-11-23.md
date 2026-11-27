@@ -166,14 +166,14 @@ APK debug mới:
 | Hạng mục | Trạng thái |
 | --- | --- |
 | Code phòng 1 host + 5 client | Hoàn thành |
-| Protocol/service v4 | Hoàn thành code/test; chờ QA hai máy |
+| Protocol/service v4 | Hoàn thành code/test; luồng hai máy đạt, chờ QA tải 1+3/1+5 |
 | Lobby năm ghế và hàng đợi pairing | Hoàn thành |
 | Test mô phỏng sáu thiết bị | Đạt |
 | APK debug mới | Đã build |
 | Cài APK lên thiết bị thật | Đạt trên Samsung `SM-X110` và POCO `220333QPG`; cùng artifact NBY-41, version `1.3.0`/code 6 |
 | QA 1 host + 3 client | Chờ thiết bị |
 | QA 1 host + 5 client | Chờ sáu thiết bị Android |
-| AAB/Production rollout | AAB sạch `1.4.1`/code `8` đã ký và kiểm tra ngày 26/11/2026; chờ upload/Internal testing, chưa rollout Production |
+| AAB/Production rollout | `1.4.2`/code `9` đã ký và phát hành thành công trên Google Play ngày 26–27/11/2026 |
 
 ## Rủi ro và bước tiếp theo
 
@@ -182,6 +182,7 @@ APK debug mới:
 3. Cho các client vào gần đồng thời để xác minh hàng đợi mã kết nối.
 4. Chơi đủ năm lượt và rematch; so balance, result và rank trên mọi máy.
 5. Thử rời phòng, chuyển nền, radio yếu và rewarded ad trong phiên.
-6. Chỉ nâng version code và tạo AAB sau khi cổng QA sáu thiết bị đạt.
+6. Production đã được publisher phát hành; phase tiếp theo phải hậu kiểm update qua
+   Play và không dùng rollout thành công để thay thế cổng QA sáu thiết bị.
 
 Theo dõi chi tiết tại `docs/nearby/TASKS.md` (NBY-31/NBY-32) và `docs/nearby/PROGRESS.md`.

@@ -12,9 +12,11 @@ func _run() -> void:
 		root.add_child(ui)
 		await process_frame
 		await process_frame
-		assert(ui.chip_grid.get_child_count() == 1)
+		assert(ui.chip_grid.get_child_count() == 2)
 		assert(ui.chip_selector_button.visible)
-		assert(ui.chip_selector_button.custom_minimum_size.y >= 104)
+		assert(ui.chip_selector_button.custom_minimum_size.y >= 80)
+		assert(ui.bet_status_panel.custom_minimum_size.y == ui.chip_selector_button.custom_minimum_size.y)
+		assert(ui.stake_label.get_parent() == ui.bet_status_panel)
 		ui._on_banner_visibility_changed(true)
 		ui._open_chip_picker()
 		await process_frame

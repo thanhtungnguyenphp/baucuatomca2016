@@ -12,10 +12,9 @@ func _check() -> void:
 	var chips := scene.get_node("Margin/Content/ChipGrid") as GridContainer
 	var status := scene.get_node("Margin/Content/StatusLabel") as Label
 	var actions := scene.get_node("SafeHeader/Actions") as HBoxContainer
-	var nearby := scene.get_node("SafeHeader/NearbyQuickButton") as Button
+	var nearby := scene.get_node("Margin/Content/NearbyQuickButton") as Button
 	var menu := scene.get_node("SafeHeader/HeaderMenuButton") as Button
 	var cards := scene.get_node("Margin/Content/MascotGrid") as GridContainer
-	var summary := scene.session_summary_panel as PanelContainer
 	print("chips=", chips.get_global_rect(), " cards=", cards.get_global_rect())
 	print("status=", status.get_global_rect(), " actions=", actions.get_global_rect())
 	var chip_width := (chips.get_child(0) as Button).size.x
@@ -23,8 +22,8 @@ func _check() -> void:
 		printerr("Secondary bottom navigation should be hidden")
 		quit(1)
 	scene._on_banner_visibility_changed(true)
-	if status.visible or summary.get_global_rect().end.y > nearby.get_global_rect().position.y:
-		printerr("Summary overlaps featured Nearby CTA")
+	if status.visible or chips.get_global_rect().end.y > nearby.get_global_rect().position.y:
+		printerr("Bet controls overlap featured Nearby CTA")
 		quit(1)
 	if menu.size.x < 96 or menu.size.y < 72:
 		printerr("Header menu touch target is too small")
@@ -32,7 +31,7 @@ func _check() -> void:
 	if not "CHƠI CÙNG BẠN Ở GẦN" in nearby.text or nearby.custom_minimum_size.y < 110:
 		printerr("Nearby feature is not discoverable from the main screen")
 		quit(1)
-	if chips.get_child_count() != 1 or chip_width < chips.size.x * 0.9:
-		printerr("Chip grid does not fill available width")
+	if chips.get_child_count() != 2 or chip_width < chips.size.x * 0.38:
+		printerr("Compact chip selector and table status do not share one row")
 		quit(1)
 	quit()

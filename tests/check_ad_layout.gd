@@ -12,14 +12,13 @@ func _run() -> void:
 		root.add_child(main)
 		await process_frame
 		main._position_bottom_actions(false)
-		var nearby := main.nearby_quick_button as Button
-		var summary := main.session_summary_panel as PanelContainer
-		var without_banner_top := nearby.offset_top
+		var margin := main.get_node("Margin") as Control
+		var surface := main.gameplay_surface as PanelContainer
+		var without_banner_bottom := margin.offset_bottom
 		main._position_bottom_actions(true)
-		assert(nearby.offset_top < without_banner_top)
-		assert(nearby.offset_bottom <= -205.0)
-		assert(summary.offset_bottom <= nearby.offset_top - 18.0)
-		assert(main.get_node("Margin").offset_bottom <= -450.0)
+		assert(margin.offset_bottom < without_banner_bottom)
+		assert(margin.offset_bottom <= -190.0)
+		assert(surface.offset_bottom <= -182.0)
 		var geometry: Rect2i = main._bottom_sheet_geometry(Vector2i(960, 980), 36, true)
 		var logical_height := int(main.get_viewport().get_visible_rect().size.y)
 		assert(geometry.end.y <= logical_height - 226)

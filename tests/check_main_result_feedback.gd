@@ -20,7 +20,7 @@ func _run() -> void:
 	assert(ui.result_overlay.visible)
 	assert("BẦU" in ui.result_overlay_label.text)
 	assert("CÁ" in ui.result_overlay_label.text)
-	assert("CHẠM TÔ ĐỂ ĐẬY LẠI" in ui.results_label.text)
+	assert("CHẠM TÔ ĐỂ ĐẬY LẠI" in ui.results_label.text.to_upper())
 	assert((ui.mascot_buttons["bau"] as MascotCard).result_state == MascotCard.RESULT_HIT)
 	assert((ui.mascot_buttons["ca"] as MascotCard).result_state == MascotCard.RESULT_HIT)
 	assert((ui.mascot_buttons["cua"] as MascotCard).result_state == MascotCard.RESULT_MISS)

@@ -21,7 +21,7 @@ tham chiếu luật chơi và asset, không dùng làm runtime cho app Store.
 - [x] Tạo `Bowl.tscn`: tô lắc, mở nắp, lộ ba xúc xắc theo kết quả chốt trước.
 - [x] Khóa lựa chọn và nút lắc trong lúc trình diễn một ván.
 
-## Chặng 3 — VFX, âm thanh và cảm ứng — đang thực hiện
+## Chặng 3 — VFX, âm thanh và cảm ứng — hoàn thành phạm vi Android hiện tại
 
 - [x] Object pool cho confetti native Canvas: node được tạo một lần, tái sử dụng
       sau mỗi ván thắng; tương thích ổn định với renderer Compatibility.
@@ -37,16 +37,16 @@ tham chiếu luật chơi và asset, không dùng làm runtime cho app Store.
 > Trước release, thay procedural SFX bằng bộ âm thanh đã mix/master và có quyền sử
 > dụng; kiến trúc `AudioDirector` giữ nguyên điểm gọi trong gameplay.
 
-## Chặng 4 — Hoàn thiện sản phẩm mobile — cần thực hiện
+## Chặng 4 — Hoàn thiện sản phẩm mobile — hoàn thành bản Android 1.4.2
 
 - [x] Menu luật chơi, lịch sử ba ván gần nhất và màn hình thiết lập.
 - [x] Lưu tiến trình cục bộ qua `ConfigFile`; không dùng tài khoản hay cloud cho V1.
 - [x] Onboarding ngắn cho lần mở đầu tiên và nút chủ động xóa tiến trình có xác nhận.
 - [ ] Chuyển cơ chế cược sang "dự đoán/lộc xuân" nếu định vị cultural-casual
       nhằm giảm rủi ro phân loại Store.
-- [ ] Thiết kế icon, splash, store screenshots và Privacy Policy.
+- [x] Thiết kế icon, splash, store screenshots và Privacy Policy cho Android.
 
-## Chặng 5 — Tối ưu và phát hành — cần thực hiện
+## Chặng 5 — Tối ưu và phát hành — Android đã phát hành, tiếp tục hậu kiểm
 
 - [x] Cache `AtlasTexture` theo frame cho mascot sprite; không tạo texture region
       mới ở mỗi `_process()`.
@@ -56,8 +56,10 @@ tham chiếu luật chơi và asset, không dùng làm runtime cho app Store.
       khi thoát app.
 - [ ] Tạo atlas đã nén trên từng nền tảng, đo RAM và APK/AAB size.
 - [ ] Profile Android cấu hình thấp và iPhone thật; đặt ngân sách 60 FPS.
-- [ ] Export Android AAB và iOS Xcode archive, ký release.
-- [ ] Internal test, crash triage, App Store/Google Play metadata.
+- [x] Export/ký Android AAB và phát hành Google Play đến `1.4.2`/code `9`.
+- [x] Hoàn tất Google Play metadata, Content rating, Data safety và Advertising ID.
+- [ ] Export iOS Xcode archive, ký release và TestFlight.
+- [ ] Hoàn thiện crash/ANR triage, update testing và QA Nearby nhiều thiết bị.
 
 Chi tiết các đầu vào thuộc publisher và quy trình release: `RELEASE_CHECKLIST.md`.
 
@@ -69,6 +71,8 @@ Chi tiết các đầu vào thuộc publisher và quy trình release: `RELEASE_C
 4. Không thêm tiền thật, đổi thưởng hoặc cơ chế mua Lộc khi chưa có quyết định
    sản phẩm/pháp lý riêng.
 
-## Kế hoạch chơi gần nhau (đang triển khai)
+## Kế hoạch chơi gần nhau (đã tích hợp, đang QA tải lớn)
 
-Thiết kế plugin Nearby Connections tái sử dụng và backlog theo thứ tự ưu tiên nằm trong [`nearby/README.md`](nearby/README.md), [`nearby/ARCHITECTURE.md`](nearby/ARCHITECTURE.md) và [`nearby/TASKS.md`](nearby/TASKS.md). Kế hoạch gameplay host chỉ điều khiển bàn, client đặt cược, leaderboard và quảng cáo nằm trong [`nearby/MULTIPLAYER_V2_PLAN.md`](nearby/MULTIPLAYER_V2_PLAN.md). Tiến độ hiện tại nằm trong [`nearby/PROGRESS.md`](nearby/PROGRESS.md); v2 mới ở bước tài liệu, chưa bắt đầu triển khai code và chưa phát hành lên Google Play.
+Thiết kế plugin Nearby Connections tái sử dụng và backlog theo thứ tự ưu tiên nằm trong [`nearby/README.md`](nearby/README.md), [`nearby/ARCHITECTURE.md`](nearby/ARCHITECTURE.md) và [`nearby/TASKS.md`](nearby/TASKS.md). Gameplay dealer host + tối đa năm client, leaderboard, rewarded và countdown 30 giây đã tích hợp và phát hành. Tiến độ/giới hạn kiểm thử nằm trong [`nearby/PROGRESS.md`](nearby/PROGRESS.md); QA 1+3/1+5, reconnect và lifecycle radio/background vẫn thuộc phase tiếp theo.
+
+Tổng hợp bàn giao mới nhất: [`PHASE_HANDOFF_2026-11-27.md`](PHASE_HANDOFF_2026-11-27.md).

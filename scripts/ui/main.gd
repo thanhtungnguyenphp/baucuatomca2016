@@ -2,6 +2,7 @@ extends Control
 
 const MASCOT_CARD_SCENE := preload("res://scenes/components/MascotCard.tscn")
 const SYMBOL_SHEET := preload("res://assets/art/bau-cua-symbol-sheet.png")
+const BOWL_HALO_SCRIPT := preload("res://scripts/presentation/bowl_halo.gd")
 
 @onready var balance_label: Label = $SafeHeader/Stats/BalanceLabel
 @onready var round_label: Label = $SafeHeader/Stats/RoundLabel
@@ -43,9 +44,10 @@ var header_menu_panel: PanelContainer
 var header_menu_entries: Dictionary = {}
 var brand_label: Label
 var hud_panel: PanelContainer
-var shake_button: Button
-var session_summary_panel: PanelContainer
-var tap_hint_panel: PanelContainer
+var bowl_halo: Control
+var tap_hint_button: Button
+var bet_status_panel: PanelContainer
+var gameplay_surface: PanelContainer
 var subtitle_ribbon: PanelContainer
 var result_overlay: PanelContainer
 var result_overlay_label: Label
@@ -77,6 +79,7 @@ func _ready() -> void:
 	rules_button.pressed.connect(_show_rules)
 	history_button.pressed.connect(_show_history)
 	onboarding_start_button.pressed.connect(_finish_onboarding)
+	onboarding_popup.popup_hide.connect(_on_onboarding_dismissed)
 	reset_progress_button.pressed.connect(reset_dialog.popup_centered)
 	privacy_options_button.pressed.connect(AdPlacement.show_privacy_options)
 	AdPlacement.privacy_options_available.connect(func(available: bool) -> void:
@@ -108,16 +111,21 @@ func _ready() -> void:
 
 func _apply_portrait_layout() -> void:
 	var viewport_height := get_viewport().get_visible_rect().size.y
-	var layout_t := clampf((viewport_height - 1650.0) / 750.0, 0.0, 1.0)
-	var bowl_height := lerpf(250.0, 500.0, layout_t)
-	var card_height := lerpf(160.0, 280.0, layout_t)
+	# Tall Android screens are expanded to a logical canvas up to about 2475 px.
+	# Scale the playable board with that canvas instead of leaving a blank lower
+	# half between the Nearby CTA and the native AdMob banner.
+	var layout_t := clampf((viewport_height - 1650.0) / 825.0, 0.0, 1.0)
+	var bowl_height := lerpf(340.0, 540.0, layout_t)
+	var card_height := lerpf(225.0, 360.0, layout_t)
 	bowl.custom_minimum_size.y = bowl_height
+	bowl.expand_stage_visual(135.0, lerpf(54.0, 95.0, layout_t))
 	for card: MascotCard in mascot_buttons.values():
 		card.custom_minimum_size.y = card_height
-	shake_button.custom_minimum_size.y = lerpf(104.0, 136.0, layout_t)
-	$Margin.offset_top = lerpf(270.0, 350.0, layout_t)
-	($Margin/Content as VBoxContainer).add_theme_constant_override("separation", int(lerpf(8.0, 18.0, layout_t)))
+	nearby_quick_button.custom_minimum_size.y = lerpf(118.0, 140.0, layout_t)
+	$Margin.offset_top = lerpf(266.0, 326.0, layout_t)
+	($Margin/Content as VBoxContainer).add_theme_constant_override("separation", int(lerpf(14.0, 50.0, layout_t)))
 	$SafeHeader/Subtitle.visible = true
+	_position_bottom_actions(AdPlacement.is_banner_visible())
 
 func _pin_board_top() -> void:
 	# The board no longer scrolls: this is intentionally a stable, glanceable
@@ -152,15 +160,36 @@ func _build_mascot_buttons() -> void:
 		mascot_buttons[symbol] = card
 
 func _build_chip_buttons() -> void:
-	chip_grid.columns = 1
+	chip_grid.columns = 2
+	chip_grid.add_theme_constant_override("h_separation", 12)
 	chip_selector_button = Button.new()
 	chip_selector_button.name = "ChipSelectorButton"
-	chip_selector_button.custom_minimum_size.y = 104
+	chip_selector_button.custom_minimum_size.y = 84
 	chip_selector_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	chip_selector_button.add_theme_font_size_override("font_size", 30)
+	chip_selector_button.size_flags_stretch_ratio = 0.92
+	chip_selector_button.add_theme_font_size_override("font_size", 27)
 	chip_selector_button.pressed.connect(_open_chip_picker)
 	_style_sheet_button(chip_selector_button)
 	chip_grid.add_child(chip_selector_button)
+
+	bet_status_panel = PanelContainer.new()
+	bet_status_panel.name = "BetStatusPanel"
+	bet_status_panel.custom_minimum_size.y = 84
+	bet_status_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bet_status_panel.size_flags_stretch_ratio = 1.08
+	var status_style := StyleBoxFlat.new()
+	status_style.bg_color = Color("4b1017e8")
+	status_style.border_color = Color("df8b35")
+	status_style.set_border_width_all(2)
+	status_style.set_corner_radius_all(20)
+	status_style.content_margin_left = 12.0
+	status_style.content_margin_right = 12.0
+	bet_status_panel.add_theme_stylebox_override("panel", status_style)
+	chip_grid.add_child(bet_status_panel)
+	stake_label.reparent(bet_status_panel)
+	stake_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	stake_label.add_theme_font_size_override("font_size", 23)
+	stake_label.add_theme_color_override("font_color", Color("fff1d0"))
 	_build_chip_picker()
 
 func _build_chip_picker() -> void:
@@ -263,10 +292,6 @@ func _build_journey_ui() -> void:
 	nearby_quick_button.add_theme_font_size_override("font_size", 27)
 	nearby_quick_button.pressed.connect(_show_nearby_party)
 	_style_nearby_cta(nearby_quick_button)
-	$SafeHeader.add_child(nearby_quick_button)
-	nearby_quick_button.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	nearby_quick_button.offset_left = 38.0
-	nearby_quick_button.offset_right = -38.0
 	_build_header_menu()
 
 	journey_popup = PopupPanel.new()
@@ -429,105 +454,91 @@ func _build_modern_tet_layout() -> void:
 	balance_label.add_theme_font_size_override("font_size", 34)
 	round_label.add_theme_font_size_override("font_size", 34)
 
-	var surface := PanelContainer.new()
-	surface.name = "GameplaySurface"
-	surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gameplay_surface = PanelContainer.new()
+	gameplay_surface.name = "GameplaySurface"
+	gameplay_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var surface_style := StyleBoxFlat.new()
 	surface_style.bg_color = Color(0.20, 0.025, 0.045, 0.12)
 	surface_style.border_color = Color(0.92, 0.52, 0.16, 0.18)
 	surface_style.set_border_width_all(1)
 	surface_style.set_corner_radius_all(28)
-	surface.add_theme_stylebox_override("panel", surface_style)
+	gameplay_surface.add_theme_stylebox_override("panel", surface_style)
 	var margin_index := $Margin.get_index()
-	add_child(surface)
-	move_child(surface, margin_index)
-	surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	surface.offset_left = 20.0
-	surface.offset_top = 310.0
-	surface.offset_right = -20.0
-	surface.offset_bottom = -174.0
+	add_child(gameplay_surface)
+	move_child(gameplay_surface, margin_index)
+	gameplay_surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	gameplay_surface.offset_left = 20.0
+	gameplay_surface.offset_top = 300.0
+	gameplay_surface.offset_right = -20.0
+	gameplay_surface.offset_bottom = -174.0
 	$Margin.offset_top = 350.0
 	$Margin.offset_bottom = -300.0
 	var content := $Margin/Content as VBoxContainer
 	content.add_theme_constant_override("separation", 18)
-	bowl.expand_stage_visual(135.0, 54.0)
 
-	# Warm stage glow makes the bowl the visual anchor without another bitmap.
-	var bowl_glow := PanelContainer.new()
-	bowl_glow.name = "BowlGlow"
-	bowl_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var glow_style := StyleBoxFlat.new()
-	glow_style.bg_color = Color(0.70, 0.16, 0.02, 0.10)
-	glow_style.border_color = Color(1.0, 0.64, 0.16, 0.0)
-	glow_style.set_corner_radius_all(220)
-	glow_style.shadow_color = Color(1.0, 0.44, 0.06, 0.55)
-	glow_style.shadow_size = 52
-	bowl_glow.add_theme_stylebox_override("panel", glow_style)
-	bowl.add_child(bowl_glow)
-	bowl.move_child(bowl_glow, 0)
-	bowl_glow.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	bowl_glow.offset_left = -250.0
-	bowl_glow.offset_top = -88.0
-	bowl_glow.offset_right = 250.0
-	bowl_glow.offset_bottom = 88.0
+	# A crisp gold sunburst follows the bowl silhouette. It deliberately avoids
+	# StyleBox shadows, which turn into a muddy rectangular blur on mobile GPUs.
+	bowl_halo = BOWL_HALO_SCRIPT.new()
+	bowl_halo.name = "BowlHalo"
+	# Keep the halo on the gameplay canvas and rely on child order to place it
+	# behind the tray/lid. A negative global z-index would hide it behind the
+	# full-screen background on Android.
+	bowl_halo.z_index = 0
+	bowl.add_child(bowl_halo)
+	bowl.move_child(bowl_halo, 0)
+	bowl_halo.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	bowl_halo.offset_left = -500.0
+	bowl_halo.offset_top = -300.0
+	bowl_halo.offset_right = 500.0
+	bowl_halo.offset_bottom = 300.0
 
 	# The mockup presents the bowl instruction as a pill, not floating copy.
 	var hint_index := results_label.get_index()
-	tap_hint_panel = PanelContainer.new()
-	tap_hint_panel.name = "TapHintPanel"
-	tap_hint_panel.custom_minimum_size.y = 66
+	tap_hint_button = Button.new()
+	tap_hint_button.name = "TapHintButton"
+	tap_hint_button.custom_minimum_size = Vector2(570.0, 60.0)
+	tap_hint_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	tap_hint_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	tap_hint_button.pressed.connect(_on_bowl_tapped)
 	var hint_style := StyleBoxFlat.new()
-	hint_style.bg_color = Color("5b1118e8")
-	hint_style.border_color = Color("ffd456")
-	hint_style.set_border_width_all(3)
-	hint_style.set_corner_radius_all(32)
-	hint_style.content_margin_left = 28.0
-	hint_style.content_margin_right = 28.0
-	tap_hint_panel.add_theme_stylebox_override("panel", hint_style)
-	content.add_child(tap_hint_panel)
-	content.move_child(tap_hint_panel, hint_index)
-	results_label.reparent(tap_hint_panel)
-	results_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	results_label.add_theme_font_size_override("font_size", 30)
+	hint_style.bg_color = Color("32070dc9")
+	hint_style.border_color = Color("efbd568f")
+	hint_style.set_border_width_all(1)
+	hint_style.set_corner_radius_all(30)
+	hint_style.content_margin_left = 24.0
+	hint_style.content_margin_right = 24.0
+	var hint_pressed := hint_style.duplicate() as StyleBoxFlat
+	hint_pressed.bg_color = Color("6a171dd9")
+	var hint_hover := hint_style.duplicate() as StyleBoxFlat
+	hint_hover.bg_color = Color("4a0d14d5")
+	hint_hover.border_color = Color("ffd875c4")
+	tap_hint_button.add_theme_stylebox_override("normal", hint_style)
+	tap_hint_button.add_theme_stylebox_override("hover", hint_hover)
+	tap_hint_button.add_theme_stylebox_override("pressed", hint_pressed)
+	tap_hint_button.add_theme_stylebox_override("disabled", hint_style)
+	content.add_child(tap_hint_button)
+	content.move_child(tap_hint_button, hint_index)
+	results_label.reparent(tap_hint_button)
+	results_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	results_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	results_label.offset_left = 22.0
+	results_label.offset_right = -22.0
+	results_label.add_theme_font_size_override("font_size", 26)
+	results_label.add_theme_color_override("font_color", Color("ffe6aa"))
 	results_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
-	shake_button = Button.new()
-	shake_button.name = "PrimaryShakeButton"
-	shake_button.custom_minimum_size.y = 136
-	shake_button.add_theme_font_size_override("font_size", 48)
-	shake_button.pressed.connect(_on_bowl_tapped)
-	_style_primary_action(shake_button)
-	content.add_child(shake_button)
-	content.move_child(shake_button, chip_grid.get_index() + 1)
-
-	# Compact status capsule lives directly above the permanent utility bar.
-	session_summary_panel = PanelContainer.new()
-	session_summary_panel.name = "SessionSummaryPanel"
-	var summary_style := StyleBoxFlat.new()
-	summary_style.bg_color = Color("4b1017e8")
-	summary_style.border_color = Color("df8b35")
-	summary_style.set_border_width_all(2)
-	summary_style.set_corner_radius_all(26)
-	session_summary_panel.add_theme_stylebox_override("panel", summary_style)
-	$SafeHeader.add_child(session_summary_panel)
-	session_summary_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	session_summary_panel.offset_left = 70.0
-	session_summary_panel.offset_top = -270.0
-	session_summary_panel.offset_right = -70.0
-	session_summary_panel.offset_bottom = -176.0
-	var summary_row := HBoxContainer.new()
-	summary_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	summary_row.add_theme_constant_override("separation", 48)
-	session_summary_panel.add_child(summary_row)
-	stake_label.reparent(summary_row)
-	challenge_label.reparent(summary_row)
-	stake_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	challenge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	stake_label.add_theme_font_size_override("font_size", 25)
-	challenge_label.add_theme_font_size_override("font_size", 25)
+	# The large duplicate shake CTA is removed. Nearby play now occupies that
+	# prime action slot while the tappable pill above remains the shake control.
+	content.add_child(nearby_quick_button)
+	content.move_child(nearby_quick_button, chip_grid.get_index() + 1)
+	nearby_quick_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nearby_quick_button.custom_minimum_size.y = 108
+	($Margin/Content/ChipLabel as Label).visible = false
+	challenge_label.add_theme_font_size_override("font_size", 22)
+	challenge_label.custom_minimum_size.y = 34
 	status_label.visible = false
-	results_label.text = "CHẠM VÀO TÔ ĐỂ LẮC"
-	status_label.text = "Chọn mệnh giá và linh vật, sau đó bấm LẮC."
+	results_label.text = "✦  Chạm vào tô để lắc"
+	status_label.text = "Chọn mệnh giá và linh vật, sau đó chạm vào tô."
 	_build_result_overlay()
 
 func _build_result_overlay() -> void:
@@ -857,22 +868,12 @@ func _show_journey() -> void:
 	_show_bottom_sheet(journey_popup, Vector2i(980, 1280))
 
 func _position_bottom_actions(banner_visible: bool) -> void:
-	# The native AdMob view owns the bottom strip. The featured multiplayer CTA
-	# and compact status capsule move together only after the ad reports loaded.
-	if not is_instance_valid(nearby_quick_button) or not is_instance_valid(session_summary_panel):
-		return
-	if banner_visible:
-		nearby_quick_button.offset_top = -325.0
-		nearby_quick_button.offset_bottom = -205.0
-		session_summary_panel.offset_top = -435.0
-		session_summary_panel.offset_bottom = -343.0
-		$Margin.offset_bottom = -450.0
-	else:
-		nearby_quick_button.offset_top = -150.0
-		nearby_quick_button.offset_bottom = -30.0
-		session_summary_panel.offset_top = -260.0
-		session_summary_panel.offset_bottom = -168.0
-		$Margin.offset_bottom = -278.0
+	# Gameplay actions now live in the normal content flow. Only the bottom strip
+	# is reserved for the native AdMob view, avoiding the large empty middle gap.
+	var bottom_reserve := 190.0 if banner_visible else 24.0
+	$Margin.offset_bottom = -bottom_reserve
+	if is_instance_valid(gameplay_surface):
+		gameplay_surface.offset_bottom = -bottom_reserve + 8.0
 
 func _on_banner_visibility_changed(visible: bool) -> void:
 	_position_bottom_actions(visible)
@@ -916,12 +917,14 @@ func _on_bowl_tapped() -> void:
 
 func _cover_bowl() -> void:
 	is_animating = true
+	if is_instance_valid(bowl_halo):
+		bowl_halo.calm()
 	_hide_round_result_feedback()
-	results_label.text = "ĐANG ĐẬY TÔ…"
+	results_label.text = "Đang đậy tô…"
 	status_label.text = "Sẵn sàng cho ván tiếp theo."
 	_refresh()
 	await bowl.play_cover()
-	results_label.text = "CHẠM VÀO TÔ ĐỂ LẮC"
+	results_label.text = "✦  Chạm vào tô để lắc"
 	_pin_board_top()
 	is_animating = false
 	_refresh()
@@ -937,7 +940,9 @@ func _shake() -> void:
 		status_label.text = "Chọn ít nhất một linh vật trước khi lắc."
 		return
 	is_animating = true
-	results_label.text = "ĐANG LẮC · GIỮ TÔ ỔN ĐỊNH"
+	if is_instance_valid(bowl_halo):
+		bowl_halo.play_shake()
+	results_label.text = "Đang lắc · giữ tô ổn định"
 	status_label.text = "Giữ chặt tô, kết quả sắp xuất hiện."
 	_refresh()
 	await bowl.play_reveal(summary["results"])
@@ -960,7 +965,9 @@ func _stabilize_board_top() -> void:
 		_pin_board_top()
 
 func _on_round_resolved(summary: Dictionary) -> void:
-	results_label.text = "CHẠM TÔ ĐỂ ĐẬY LẠI"
+	if is_instance_valid(bowl_halo):
+		bowl_halo.celebrate(int(summary["payout"]) > 0)
+	results_label.text = "✦  Chạm tô để đậy lại"
 	status_label.text = "Nhận %s · %s. Chạm tô để đậy lại." % [
 		GameConstants.format_luck(summary["payout"]),
 		GameConstants.format_signed_luck(summary["net"]),
@@ -1090,6 +1097,12 @@ func _layout_bottom_sheet_content(popup: PopupPanel) -> void:
 func _show_onboarding() -> void:
 	_show_bottom_sheet(onboarding_popup, Vector2i(860, 440), 100, false)
 
+func _on_onboarding_dismissed() -> void:
+	# Closing by Back or tapping outside counts as completing the one-time guide.
+	# This prevents the popup from returning on every app launch.
+	GameSettings.mark_onboarding_seen()
+	AdPlacement.set_banner_allowed(true)
+
 func _on_info_popup_hidden() -> void:
 	AdPlacement.set_banner_allowed(true)
 
@@ -1115,7 +1128,8 @@ func _on_go_back_requested() -> void:
 
 func _finish_onboarding() -> void:
 	GameSettings.mark_onboarding_seen()
-	onboarding_popup.hide()
+	if onboarding_popup.visible:
+		onboarding_popup.hide()
 	AdPlacement.set_banner_allowed(true)
 	call_deferred("_scroll_board_to_top")
 
@@ -1127,7 +1141,7 @@ func _reset_progress() -> void:
 	GameSession.reset()
 	EngagementProgress.reset()
 	_hide_round_result_feedback()
-	results_label.text = "CHẠM VÀO TÔ ĐỂ LẮC"
+	results_label.text = "✦  Chạm vào tô để lắc"
 	status_label.text = "Đã bắt đầu một hành trình Lộc mới."
 	settings_popup.hide()
 
@@ -1154,16 +1168,8 @@ func _refresh() -> void:
 		chip_picker_balance.text = "CÒN CÓ THỂ ĐẶT: %s" % GameConstants.format_luck(maxi(0, GameSession.balance - GameSession.total_bet()))
 	if is_instance_valid(chip_picker_overlay) and is_instance_valid(chip_selector_button) and chip_picker_overlay.visible and chip_selector_button.disabled:
 		chip_picker_overlay.visible = false
-	var total_bet := GameSession.total_bet()
-	shake_button.disabled = is_animating or (not bowl.is_revealed and total_bet <= 0)
-	if is_animating:
-		shake_button.text = "ĐANG XỬ LÝ…"
-	elif bowl.is_revealed:
-		shake_button.text = "ĐẬY TÔ · VÁN TIẾP"
-	elif total_bet <= 0:
-		shake_button.text = "◆  LẮC"
-	else:
-		shake_button.text = "◆  LẮC · %s" % GameConstants.format_luck(total_bet)
+	if is_instance_valid(tap_hint_button):
+		tap_hint_button.disabled = is_animating
 	settings_button.disabled = GameSession.is_round_in_progress
 	journey_button.disabled = GameSession.is_round_in_progress
 	rules_button.disabled = GameSession.is_round_in_progress

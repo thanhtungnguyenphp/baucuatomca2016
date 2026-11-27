@@ -201,7 +201,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-z_index = 5
+z_index = 50
 
 [node name="Title" type="Label" parent="SafeHeader"]
 layout_mode = 1

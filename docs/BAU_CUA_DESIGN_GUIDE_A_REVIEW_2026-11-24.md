@@ -35,6 +35,15 @@ Mockup cho hướng thị giác, nhưng QA thao tác thực tế xác nhận mul
 - Kết quả tách khỏi tip: overlay sáng hiển thị trong 3 giây, đồng thời card trúng dùng reaction/glow/phóng lớn và card hụt giảm sáng.
 - Layout dùng kích thước bowl/card/margin nội suy theo chiều cao; CTA Nearby, status và gameplay margin cùng dời khi banner load để không tạo khoảng trắng giả khi no-fill.
 
+## Chốt giao diện phát hành — NBY-42, 27/11/2026
+
+- Thay shadow blur sau tô bằng sunburst halo native sắc nét và tăng cường khi lắc/kết quả.
+- Tooltip lắc/đậy thu gọn, căn giữa, nền trong nhẹ và viền 1 px; không còn kéo ngang như một ô nhập liệu.
+- Splash/adaptive icon dùng nền đỏ Tết, onboarding đóng một lần được lưu.
+- CTA Nearby nằm trong content flow; mệnh giá và tổng cược cùng hàng; vùng dưới
+  dành cho anchored adaptive banner sau callback loaded.
+- Bản `1.4.2`/code `9` đã qua test Main/onboarding/banner/result và phát hành Google Play.
+
 ## Đối chiếu với game trước khi tối ưu
 
 | Hạng mục guide | Trạng thái trước | Đánh giá |
@@ -105,8 +114,9 @@ Mockup cho hướng thị giác, nhưng QA thao tác thực tế xác nhận mul
 ## Acceptance hiện tại
 
 - CTA chính có text + disabled reason, không chỉ dựa vào màu.
-- Gameplay/Nearby không cho phép banner.
-- Menu/popup thông tin có thể cho banner và tự trả layout khi đóng.
+- Main cho phép banner anchored adaptive ở vùng đáy; Nearby tắt banner để giữ
+  lobby/gameplay nhóm ổn định. Layout chỉ chừa vùng sau callback loaded.
+- Menu/popup tự giữ safe area và trả layout khi đóng.
 - Không còn interstitial tự bật trong vòng lặp lắc/đậy tô.
 - Luật, balance, payout và RNG không thay đổi.
 - Test hồi quy và test Modern Tết phải đạt trước khi build thiết bị.
@@ -122,8 +132,8 @@ Mockup cho hướng thị giác, nhưng QA thao tác thực tế xác nhận mul
 
 ## Backlog đề xuất
 
-1. P0: QA ảnh/video trên Redmi, POCO và tablet cho idle/selected/shaking/result/menu.
-2. P0: quyết định chính sách rewarded multiplayer.
-3. P1: tách Home/mode selection, chuyển banner về Home và History.
+1. P0: update test qua Google Play và QA Nearby 1+3/1+5 thiết bị thật.
+2. P0: rewarded lifecycle earned/cancel/fail/offline không làm mất phòng.
+3. P1: tách Home/mode selection nếu cần giảm mật độ gameplay.
 4. P1: đánh giá font Be Vietnam Pro và fallback.
 5. P2: mở rộng viewport/notch/gesture/3-button navigation và profiling 30/60 FPS.

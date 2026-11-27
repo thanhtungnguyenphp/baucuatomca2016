@@ -1,16 +1,16 @@
 # Nội dung Google Play — Bầu Cua Tôm Cá: Lộc Xuân
 
-> Trạng thái: bản nháp để nhập Play Console. Chủ phát hành phải thay các mục
-> trong ngoặc vuông trước khi gửi duyệt.
+> Trạng thái 27/11/2026: nội dung nền đã dùng cho bản Android phát hành. Rà lại
+> Data safety, quyền và screenshot sau mỗi thay đổi SDK/tính năng.
 
 ## Thông tin cơ bản
 
 - Tên ứng dụng: **Bầu Cua Tôm Cá: Lộc Xuân**
 - Package: `vn.lamgame.baucuatomca`
 - Danh mục: Game / Casual
-- Email hỗ trợ: `baucuatomca@lamgame.vn` (cần xác nhận hộp thư hoạt động)
+- Email hỗ trợ: `baucuatomca@lamgame.vn`
 - Website: `https://lamgame.vn`
-- URL Chính sách quyền riêng tư: `https://lamgame.vn/page/chinh-sach-bao-mat-bau-cua-tom-ca` (cần xác nhận nội dung đã đồng bộ)
+- URL Chính sách quyền riêng tư: `https://lamgame.vn/page/chinh-sach-bao-mat-bau-cua-tom-ca`
 
 ## Mô tả ngắn
 
@@ -24,7 +24,8 @@ Bầu Cua Tôm Cá Lộc Xuân: lắc tô, sưu tập linh vật, chơi cùng b�
 - Sáu linh vật: Bầu, Cua, Tôm, Cá, Gà và Nai.
 - Lưu tiến trình, lịch sử ván chơi và thiết lập ngay trên thiết bị.
 - Hoàn thành thử thách hằng ngày, ghi dấu theo tuần và khám phá bộ sưu tập sáu linh vật.
-- Mở khóa các màu giao diện và chơi cùng 2–4 người trên một thiết bị.
+- Mở khóa các màu giao diện, chơi cùng 2–4 người trên một thiết bị hoặc tạo phòng
+  gần nhau cho một chủ bàn và tối đa năm người chơi Android.
 - Hỗ trợ rung phản hồi, âm thanh và chế độ giảm chuyển động.
 - Không cần tạo tài khoản. Phần chơi chính hoạt động ngoại tuyến; quảng cáo có thể cần mạng.
 
@@ -33,7 +34,8 @@ Bầu Cua Tôm Cá Lộc Xuân: lắc tô, sưu tập linh vật, chơi cùng b�
 ## Tuyên bố khi điền Play Console
 
 - App access: không yêu cầu đăng nhập.
-- Ads: có banner và quảng cáo xen kẽ giữa một số ván.
+- Ads: có banner, quảng cáo xen kẽ theo điểm nghỉ tự nhiên và rewarded khi client
+  Nearby hết Lộc; không mua bán Lộc.
 - Advertising ID: có thể được Google Mobile Ads SDK sử dụng; khai báo đúng trong Play Console.
 - Data safety: khai báo dữ liệu do Google Mobile Ads SDK thu thập/chia sẻ theo artifact cuối và tài liệu SDK; không chọn “không thu thập dữ liệu”.
 - Content rating: khai báo chính xác nội dung mô phỏng trò chơi có cơ chế điểm/đặt Lộc ảo khi biểu mẫu IARC hỏi; không chọn Designed for Families.

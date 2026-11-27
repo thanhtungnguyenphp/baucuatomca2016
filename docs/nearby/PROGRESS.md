@@ -1,8 +1,26 @@
 # Tiến độ nhánh Nearby Connections
 
-**Nhánh:** `codex/feature-nearby-connections`
+**Nhánh tích hợp:** `main`
 
-**Trạng thái (24/11/2026):** NBY-24–26 và NBY-28–39 đã hoàn thành code/test. Bản hiện tại có phòng 1 host + tối đa 5 client, protocol v4/countdown 30 giây, lobby MOBA, điều khiển cược mobile, menu header và gameplay Modern Tết. NBY-27/NBY-30/NBY-32 vẫn cần QA nhiều thiết bị trước khi chốt release candidate.
+**Trạng thái (27/11/2026):** NBY-24–26 và NBY-28–42 đã hoàn thành code/test; Android `1.4.2`/code `9` đã phát hành trên Google Play. Bản hiện tại có phòng 1 dealer host + tối đa 5 client, protocol v4/countdown 30 giây, lobby MOBA, điều khiển cược mobile và Home Modern Tết. NBY-22/NBY-27/NBY-30/NBY-32 vẫn cần QA nhiều thiết bị; reconnect/plugin packaging và profiling thuộc phase kế tiếp.
+
+## Chốt phase và phát hành 1.4.2 — 27/11/2026
+
+- NBY-42 hoàn thành: thay shadow blur sau tô bằng sunburst halo native; splash và
+  adaptive icon có nền đỏ Tết; onboarding đóng một lần được lưu; CTA Nearby nằm
+  trong content flow; mệnh giá và tổng cược cùng hàng; tooltip lắc/đậy được thu
+  gọn, căn giữa và giữ vùng chạm.
+- Toàn bộ 22 entrypoint test core/Main/Party/Nearby đạt; không phát hiện hồi quy.
+  Quy trình đầy đủ được ghi trong
+  `docs/PHASE_HANDOFF_2026-11-27.md`.
+- AAB `1.4.2`/code `9`, package `vn.lamgame.baucuatomca`, min SDK 24, target SDK
+  36 đã ký và được publisher phát hành thành công trên Google Play.
+- Một thiết bị phát triển không update được nhưng gỡ/cài lại từ Store thành công.
+  Nguyên nhân phù hợp lịch sử là production APK từng sideload bằng upload key,
+  trong khi Play giao APK bằng app-signing key. Từ phase sau, ADB chỉ cài package
+  `.dev`; test update production phải đi qua Play/Internal testing.
+- Chưa dùng việc publish thành công để đóng các gate 1+3/1+5 thiết bị, reconnect,
+  rewarded lifecycle, radio/background hoặc profiling dài hạn.
 
 ## Tối ưu nhận diện người chơi và phản hồi kết quả — 22/11/2026
 
@@ -132,8 +150,16 @@
 
 ## Chưa xác minh / việc tiếp theo
 
-1. **NBY-22 hai máy:** mở khóa Android 15 và kết nối lại Android 11; chơi đủ năm lượt theo cả hai chiều host/client, rematch, rời phòng và rewarded lifecycle.
-2. **NBY-05/NBY-22 bốn máy:** cần thêm hai Android thật để thử một host và ba client với `P2P_STAR`; chưa thể quyết định Go/No-Go bốn thiết bị.
-3. **NBY-23:** upload AAB 1.3.0/code 6 lên Internal testing, kiểm tra báo cáo pre-launch và rà lại Data safety/Advertising ID/Nearby permissions theo artifact cuối.
+1. **NBY-22/NBY-27:** hai máy theo cả hai chiều host/client với rewarded
+   earned/cancel/fail/offline, background/foreground, reduce motion và FPS.
+2. **NBY-05/NBY-30:** một host + 2/3 client vào gần đồng thời, từ chối/rời trước
+   khi bắt đầu, năm lượt/rematch và snapshot thống nhất.
+3. **NBY-32:** một host + năm client thật, phòng đầy/client thứ sáu, radio yếu và
+   disconnect. Test mô phỏng sáu thiết bị không thay thế gate này.
+4. **NBY-06/07/11:** hardening timeout/retry/cleanup, reconnect đúng ghế và đóng
+   gói addon versioned dùng được trong dự án Godot trống.
+5. **Release quality:** update test qua Google Play, pre-launch/crash/ANR, 20 ván,
+   FPS/RAM/cold start, TalkBack/notch/navigation và license art/SFX.
 
-**Giới hạn phát hành hiện tại:** đã có AAB release candidate theo yêu cầu, nhưng chưa gửi Production rollout trước khi QA v2 hai/bốn máy và rewarded lifecycle đạt.
+**Giới hạn hiện tại:** production đã phát hành theo quyết định của publisher,
+nhưng chưa có đủ bằng chứng để tuyên bố Nearby ổn định ở tải tối đa sáu thiết bị.

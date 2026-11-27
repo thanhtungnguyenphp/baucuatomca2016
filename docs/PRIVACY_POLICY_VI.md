@@ -1,8 +1,8 @@
 # Chính sách quyền riêng tư — Bầu Cua Tôm Cá: Lộc Xuân
 
-**Cập nhật:** 04/11/2026  
-**Ứng dụng:** `vn.lamgame.baucuatomca`  
-**Đơn vị vận hành:** LamGame.vn  
+**Cập nhật:** 27/11/2026
+**Ứng dụng:** `vn.lamgame.baucuatomca`
+**Đơn vị vận hành:** LamGame.vn
 **Liên hệ:** baucuatomca@lamgame.vn
 
 ## Dữ liệu trò chơi trên thiết bị
@@ -31,6 +31,6 @@ Người chơi có thể chọn **Xóa tiến trình cục bộ** trong Tùy ch�
 
 ## Liên hệ
 
-Gửi câu hỏi về quyền riêng tư đến baucuatomca@lamgame.vn.
-
-> Đồng bộ nội dung này lên URL chính sách đang khai báo trong Google Play và xác nhận địa chỉ email liên hệ hoạt động trước khi phát hành bản cập nhật.
+Gửi câu hỏi về quyền riêng tư đến baucuatomca@lamgame.vn. Nội dung công khai phải
+được giữ đồng bộ với URL chính sách đang khai báo trên Google Play sau mỗi thay
+đổi SDK hoặc cách xử lý dữ liệu.

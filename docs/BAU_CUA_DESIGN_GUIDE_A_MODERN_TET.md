@@ -175,18 +175,18 @@ Canvas (Screen Space Overlay, Canvas Scaler)
 ## 8. Task triển khai và acceptance criteria
 
 ### P0 — Layout và chức năng
-- [ ] Tạo prefab Header, HUD, BowlStage, AnimalCell, ActionPanel, SafeAreaRoot.
-- [ ] Xóa khoảng trống dư, giữ đủ sáu linh vật và toàn bộ CTA trên 390×844.
-- [ ] Chuyển multiplayer vào Home/menu nhưng vẫn dễ tìm, tối đa hai thao tác từ gameplay.
-- [ ] State UI nhất quán với game state, không có double-trigger khi lắc.
-- [ ] Không thay đổi game rules, số dư hay kết quả khi đổi theme.
+- [x] Dựng Header, HUD, BowlStage, AnimalCell, ActionPanel và safe content bằng Godot Control/Scene.
+- [x] Xóa khoảng trống dư, giữ đủ sáu linh vật và CTA trên các viewport Android tự động.
+- [x] CTA **Chơi cùng bạn ở gần** hiển thị trực tiếp trên Main và trong menu.
+- [x] State UI nhất quán với game state, không có double-trigger khi lắc.
+- [x] Không thay đổi game rules, số dư hay kết quả khi đổi theme.
 
 ### P1 — Theme và quảng cáo
-- [ ] Tạo theme tokens/prefab variants; reuse logic controller chung.
-- [ ] AdContainer chỉ hoạt động trên route được phép; xác nhận native ad không che UI.
+- [x] Reuse controller/model chung; theme/presentation không thay luật.
+- [x] Banner chỉ hoạt động trên route được phép và dành safe area sau callback loaded.
 - [ ] Kiểm thử consent, test ads, no-fill, offline, hide/destroy và resume app.
-- [ ] Các màn có quảng cáo giữ vùng đệm không tương tác, không có click target kề sát.
-- [ ] Kiểm tra phân loại nội dung, độ tuổi và chính sách trước publish.
+- [x] Các màn có quảng cáo giữ vùng đệm không tương tác, không có click target kề sát.
+- [x] Publisher đã hoàn tất phân loại nội dung, độ tuổi và chính sách cho bản Android.
 
 ### P2 — Polish và QA
 - [ ] Test 360×640, 360×800, 390×844, 412×915, tablet 768×1024 (logical units).
@@ -194,7 +194,7 @@ Canvas (Screen Space Overlay, Canvas Scaler)
 - [ ] Test idle, selected, shaking, revealing, result, pause/resume, mất mạng.
 - [ ] Test thao tác tay trái/phải; mục tiêu vùng chạm tối thiểu 48×48 dp, text thường tương phản ≥4.5:1.
 - [ ] Profiling Android cấu hình thấp, mục tiêu 30 FPS ổn định trở lên, 60 FPS nếu thiết bị hỗ trợ; đo thực tế thay vì cam kết từ mockup.
-- [ ] Không còn quảng cáo trên gameplay active, không lỗi layout do banner tải muộn, không bị che CTA.
+- [x] Banner Main không làm lỗi layout khi tải muộn và không che CTA; Nearby tắt banner.
 
 ## 9. Deliverables cho team
 
